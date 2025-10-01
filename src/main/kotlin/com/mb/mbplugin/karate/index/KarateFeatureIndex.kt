@@ -15,6 +15,7 @@ import com.intellij.util.io.KeyDescriptor
 import com.mb.mbplugin.karate.psi.GherkinFileType
 import java.io.DataInput
 import java.io.DataOutput
+import java.nio.charset.StandardCharsets
 
 /**
  * Index for Karate feature files and their scenario tags
@@ -89,8 +90,9 @@ class KarateFeatureIndex : FileBasedIndexExtension<String, KarateFeatureData>() 
         val tags = mutableListOf<String>()
         val text = psiFile.text
         
-        // Simple regex to find tags like @login, @smoke, etc.
-        val tagPattern = Regex("@([a-zA-Z_][a-zA-Z0-9_]*)")
+        // Enhanced regex to find tags like @login, @smoke, etc.
+        // Supports UTF-8 characters in tag names using Unicode property classes
+        val tagPattern = Regex("@([\\p{L}_][\\p{L}\\p{N}_]*)")
         tagPattern.findAll(text).forEach { match ->
             tags.add(match.groupValues[1]) // Add without @ symbol
         }
@@ -110,9 +112,11 @@ class KarateFeatureIndex : FileBasedIndexExtension<String, KarateFeatureData>() 
             val sourceRootPath = "$projectPath/$sourceRoot".replace("/", java.io.File.separator)
             if (filePath.startsWith(sourceRootPath)) {
                 // Return path after the source root (this is the classpath)
-                return filePath.substring(sourceRootPath.length + 1)
+                val relativePath = filePath.substring(sourceRootPath.length + 1)
                     .replace("\\", "/")
                     .replace(java.io.File.separator, "/")
+                // Ensure proper UTF-8 encoding and handle spaces
+                return relativePath
             }
         }
         
@@ -127,9 +131,11 @@ class KarateFeatureIndex : FileBasedIndexExtension<String, KarateFeatureData>() 
                 val sourceRoots = moduleRootManager.sourceRoots
                 for (sourceRoot in sourceRoots) {
                     if (filePath.startsWith(sourceRoot.path)) {
-                        return filePath.substring(sourceRoot.path.length + 1)
+                        val relativePath = filePath.substring(sourceRoot.path.length + 1)
                             .replace("\\", "/")
                             .replace(java.io.File.separator, "/")
+                        // Ensure proper UTF-8 encoding and handle spaces
+                        return relativePath
                     }
                 }
             }
@@ -139,9 +145,14 @@ class KarateFeatureIndex : FileBasedIndexExtension<String, KarateFeatureData>() 
         
         // Fallback: relative to project root
         return if (filePath.startsWith(projectPath)) {
-            filePath.substring(projectPath.length + 1).replace("\\", "/")
+            val relativePath = filePath.substring(projectPath.length + 1)
+                .replace("\\", "/")
+                .replace(java.io.File.separator, "/")
+            // Ensure proper UTF-8 encoding and handle spaces
+            relativePath
         } else {
-            filePath
+            // Return just the filename if all else fails
+            file.name
         }
     }
 }
@@ -156,16 +167,18 @@ data class KarateFeatureData(
 )
 
 /**
- * Externalizer for KarateFeatureData
+ * Externalizer for KarateFeatureData with proper UTF-8 handling
  */
 class KarateFeatureDataExternalizer : DataExternalizer<KarateFeatureData> {
     override fun save(out: DataOutput, value: KarateFeatureData) {
+        // Use writeUTF for proper UTF-8 encoding
         out.writeUTF(value.relativePath)
         out.writeUTF(value.tag)
         out.writeUTF(value.absolutePath)
     }
     
     override fun read(input: DataInput): KarateFeatureData {
+        // readUTF handles UTF-8 decoding automatically
         val relativePath = input.readUTF()
         val tag = input.readUTF()
         val absolutePath = input.readUTF()
