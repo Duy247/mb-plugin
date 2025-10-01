@@ -21,6 +21,7 @@
                     <li>Go to Definition</li>
                     <li>Find Usages</li>
                     <li>Code Commenting</li>
+                    <li>Jira Issue Integration - Hover on @MBA-XXXXX tags and use Alt+Enter to open Jira issues in your default browser</li>
                </ul>
           <br><br>
           Specifically made for App Team's MB project. If you are from another team and trying to copy this, goodluck :)
@@ -32,6 +33,12 @@
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>org.intellij.intelliLang</depends>
+
+    <!-- Project Services -->
+    <projectListeners>
+        <listener class="com.mb.mbplugin.jira.JiraProjectListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
+    </projectListeners>
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -75,5 +82,27 @@
         <!-- Tag Completion Contributor -->
         <completion.contributor language="Karate"
                                implementationClass="com.mb.mbplugin.karate.completion.KarateTagCompletionContributor"/>
+        
+        <!-- Jira Integration Settings -->
+        <projectConfigurable
+                groupId="tools"
+                displayName="Jira Integration"
+                id="com.mb.mbplugin.settings.JiraSettingsConfigurable"
+                implementation="com.mb.mbplugin.settings.JiraSettingsConfigurable"/>
+        
+        <!-- Jira Issue Intention Actions -->
+        <intentionAction>
+            <category>Jira Integration</category>
+            <className>com.mb.mbplugin.jira.OpenJiraIssueIntention</className>
+        </intentionAction>
+        
+        <intentionAction>
+            <category>Jira Integration</category>
+            <className>com.mb.mbplugin.jira.OpenMultipleJiraIssuesIntention</className>
+        </intentionAction>
+        
+        <!-- Jira Issue Line Marker Provider -->
+        <codeInsight.lineMarkerProvider language="Karate"
+                                        implementationClass="com.mb.mbplugin.jira.JiraIssueLineMarkerProvider"/>
     </extensions>
 </idea-plugin>

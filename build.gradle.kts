@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.0.2"
+version = "1.0.3"
 
 repositories {
     mavenCentral()
@@ -35,11 +35,11 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Version 1.0.2
-            - Added Karate language support for .feature files
-            - Syntax highlighting for Gherkin, JSON, and XML content
-            - Go-to definition support for classpath: and file references
-            - Code completion for Karate call read
+            Version 1.0.3
+            - Added Jira Integration: Hover on @MBA-XXXXX tags and use Alt+Enter to open Jira issues in default browser
+            - Configurable Jira base URL in Settings > Tools > Jira Integration
+            - Gutter icons for quick access to Jira issues
+            - Previous features: Karate language support, syntax highlighting, code completion
         """.trimIndent()
     }
 }
