@@ -68,5 +68,12 @@
         <!-- Commenter -->
         <lang.commenter language="Karate"
                         implementationClass="com.mb.mbplugin.karate.psi.GherkinCommenter"/>
+        
+        <!-- Feature File Index -->
+        <fileBasedIndex implementation="com.mb.mbplugin.karate.index.KarateFeatureIndex"/>
+        
+        <!-- Tag Completion Contributor -->
+        <completion.contributor language="Karate"
+                               implementationClass="com.mb.mbplugin.karate.completion.KarateTagCompletionContributor"/>
     </extensions>
 </idea-plugin>

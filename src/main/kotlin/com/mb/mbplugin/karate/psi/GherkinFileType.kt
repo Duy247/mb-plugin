@@ -17,5 +17,5 @@ class GherkinFileType : LanguageFileType(KarateLanguage.INSTANCE) {
 
     override fun getDefaultExtension(): String = "feature"
 
-    override fun getIcon(): Icon? = IconLoader.getIcon("/META-INF/pluginIcon.svg", GherkinFileType::class.java)
+    override fun getIcon(): Icon? = IconLoader.getIcon("/icons/karate-file.svg", GherkinFileType::class.java)
 }
