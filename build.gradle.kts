@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.0-SNAPSHOT"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -35,7 +35,12 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Initial version
+            Version 1.0.1
+            - Added Karate language support for .feature files
+            - Syntax highlighting for Gherkin, JSON, and XML content
+            - Go-to definition support for classpath: and file references
+            - Code completion and navigation features
+            - Fixed internal API usage warnings
         """.trimIndent()
     }
 }
