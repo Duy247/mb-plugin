@@ -1,0 +1,11 @@
+.gradle
+.idea
+.qodana
+build
+
+target/
+.kotlin/
+.DS_STORE
+
+.intellijPlatform
+/out/

@@ -1,0 +1,70 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.mb.mb-plugin</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
+    <name>MB Plugin For AutoTest</name>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
+    <description><![CDATA[
+        Plugin for Karate framework support in IntelliJ IDEA.
+        <br><br>
+            Features:
+               <ul>
+                    <li>Syntax Highlighting</li>
+                    <li>Code Completion</li>
+                    <li>Go to Definition</li>
+                    <li>Find Usages</li>
+                    <li>Code Commenting</li>
+               </ul>
+          <br>br>
+          Specifically made for App Team's MB project.
+    ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+    <depends>com.intellij.modules.json</depends>
+    <depends>org.intellij.intelliLang</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Karate File Type -->
+        <fileType name="Karate"
+                  implementationClass="com.mb.mbplugin.karate.psi.GherkinFileType"
+                  fieldName="INSTANCE" language="Karate" extensions="feature"/>
+        
+        <!-- Syntax Highlighting -->
+        <lang.syntaxHighlighterFactory language="Karate"
+                                       implementationClass="com.mb.mbplugin.karate.psi.GherkinSyntaxHighlighterFactory"/>
+        
+        <!-- Parser Definition -->
+        <lang.parserDefinition language="Karate"
+                               implementationClass="com.mb.mbplugin.karate.psi.KarateParserDefinition"/>
+        
+        <!-- Find Usages Provider -->
+        <lang.findUsagesProvider language="Karate"
+                                 implementationClass="com.mb.mbplugin.karate.psi.KarateFindUsagesProvider"/>
+        
+        <!-- Reference Contributor for Go-To Definition -->
+        <psi.referenceContributor language="Karate"
+                                  implementation="com.mb.mbplugin.karate.steps.reference.KarateReferenceContributor"/>
+        
+        <!-- Go To Declaration Handler -->
+        <gotoDeclarationHandler
+                implementation="com.mb.mbplugin.karate.navigation.KarateGoToSymbolProvider"/>
+        
+        <!-- Color Settings Page -->
+        <colorSettingsPage
+                implementation="com.mb.mbplugin.karate.psi.GherkinColorsPage"/>
+        
+        <!-- Commenter -->
+        <lang.commenter language="Karate"
+                        implementationClass="com.mb.mbplugin.karate.psi.GherkinCommenter"/>
+    </extensions>
+</idea-plugin>

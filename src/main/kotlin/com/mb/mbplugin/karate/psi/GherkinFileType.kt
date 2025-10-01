@@ -1,0 +1,21 @@
+package com.mb.mbplugin.karate.psi
+
+import com.intellij.openapi.fileTypes.LanguageFileType
+import com.intellij.openapi.util.IconLoader
+import com.mb.mbplugin.karate.KarateLanguage
+import javax.swing.Icon
+
+class GherkinFileType : LanguageFileType(KarateLanguage.INSTANCE) {
+    companion object {
+        @JvmStatic
+        val INSTANCE = GherkinFileType()
+    }
+
+    override fun getName(): String = "Karate"
+
+    override fun getDescription(): String = "Karate feature files"
+
+    override fun getDefaultExtension(): String = "feature"
+
+    override fun getIcon(): Icon? = IconLoader.getIcon("/META-INF/pluginIcon.svg", GherkinFileType::class.java)
+}
