@@ -5,12 +5,14 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>MB Plugin For AutoTest</name>
+    <name>MBKarate For AutoTest</name>
+
+    <vendor>Duy Van Thanh</vendor>
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
     <description><![CDATA[
-        Plugin for Karate framework support in IntelliJ IDEA.
+        For Karate framework support in IntelliJ IDEA.
         <br><br>
             Features:
                <ul>

@@ -5,24 +5,32 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiReference
 import com.intellij.psi.PsiReferenceProvider
 import com.intellij.util.ProcessingContext
-import com.mb.mbplugin.karate.psi.KarateTokenTypes
+import java.util.regex.Pattern
 
 class KarateStepReferenceProvider : PsiReferenceProvider() {
+    companion object {
+        private val VARIABLE_PATTERN = Pattern.compile("([\\w.]+)")
+    }
+
     override fun getReferencesByElement(
         element: PsiElement,
         context: ProcessingContext
     ): Array<PsiReference> {
-        val elementType = element.node?.elementType
+        val references = mutableListOf<PsiReference>()
         
-        // Create references for step keywords and variables
-        return when (elementType) {
-            KarateTokenTypes.STEP_KEYWORD,
-            KarateTokenTypes.ACTION_KEYWORD,
-            KarateTokenTypes.VARIABLE,
-            KarateTokenTypes.DECLARATION -> {
-                arrayOf(KarateStepReference(element, TextRange(0, element.textLength)))
-            }
-            else -> emptyArray()
+        // Create a general reference for the entire element
+        val textRange = TextRange(0, element.textLength)
+        references.add(KarateStepReference(element, textRange))
+        
+        // Look for variable patterns in the text
+        val matcher = VARIABLE_PATTERN.matcher(element.text)
+        while (matcher.find()) {
+            val start = matcher.start()
+            val end = matcher.end()
+            val variableRange = TextRange(start, end)
+            references.add(KarateStepReference(element, variableRange))
         }
+        
+        return references.toTypedArray()
     }
 }
