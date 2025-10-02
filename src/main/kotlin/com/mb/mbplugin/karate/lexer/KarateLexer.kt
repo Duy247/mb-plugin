@@ -79,6 +79,7 @@ class KarateLexer : LexerBase() {
             currentChar() == '>' -> readXmlEnd()
             isInTableRow && !isWhitespace(currentChar()) && currentChar() != '\n' -> readTableCell()
             isKeywordStart() -> readKeywordOrText()
+            isParameterJsonStart() -> readParameterJson() // Handle JSON parameters specially
             else -> readText()
         }
         
@@ -302,6 +303,28 @@ class KarateLexer : LexerBase() {
         return currentChar() == '{'
     }
     
+    // Check if we're at the start of a JSON parameter (common in call statements)
+    private fun isParameterJsonStart(): Boolean {
+        // Look back for indications that this is a parameter JSON
+        // Like "call(...) {"
+        var lookback = position - 1
+        while (lookback >= startOffset && isWhitespace(buffer!![lookback])) {
+            lookback--
+        }
+        return currentChar() == '{' && lookback >= startOffset && 
+               (buffer!![lookback] == ')' || buffer!![lookback] == '\'')
+    }
+    
+    // Handle JSON parameters in call statements
+    private fun readParameterJson() {
+        tokenStart = position
+        tokenType = KarateTokenTypes.JSON_START
+        position++  // Skip the opening brace
+        
+        // This method just handles the opening brace
+        // Subsequent calls to advance() will handle the content and closing brace
+    }
+    
     private fun readJsonContent() {
         // This is a simplified JSON parser
         // In a real implementation, we'd use a more sophisticated approach
@@ -318,6 +341,11 @@ class KarateLexer : LexerBase() {
             if (position < endOffset && depth > 0) {
                 position++
             }
+        }
+        
+        // Make sure we correctly handle the closing brace
+        if (position < endOffset && currentChar() == '}') {
+            position++  // Consume the closing brace
         }
         
         tokenType = KarateTokenTypes.JSON_INJECTABLE
