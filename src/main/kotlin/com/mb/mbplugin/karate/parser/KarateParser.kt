@@ -19,7 +19,8 @@ class KarateParser : PsiParser {
                 KarateTokenTypes.SCENARIO_OUTLINE_KEYWORD -> parseScenario(builder)
                 KarateTokenTypes.BACKGROUND_KEYWORD -> parseBackground(builder)
                 KarateTokenTypes.STEP_KEYWORD,
-                KarateTokenTypes.ACTION_KEYWORD -> parseStep(builder)
+                KarateTokenTypes.ACTION_KEYWORD,
+                KarateTokenTypes.ASTERISK -> parseStep(builder)
                 else -> builder.advanceLexer()
             }
         }
@@ -51,7 +52,8 @@ class KarateParser : PsiParser {
                builder.tokenType != KarateTokenTypes.SCENARIO_KEYWORD &&
                builder.tokenType != KarateTokenTypes.FEATURE_KEYWORD) {
             if (builder.tokenType == KarateTokenTypes.STEP_KEYWORD ||
-                builder.tokenType == KarateTokenTypes.ACTION_KEYWORD) {
+                builder.tokenType == KarateTokenTypes.ACTION_KEYWORD ||
+                builder.tokenType == KarateTokenTypes.ASTERISK) {
                 parseStep(builder)
             } else {
                 builder.advanceLexer()
@@ -70,7 +72,8 @@ class KarateParser : PsiParser {
                builder.tokenType != KarateTokenTypes.SCENARIO_KEYWORD &&
                builder.tokenType != KarateTokenTypes.FEATURE_KEYWORD) {
             if (builder.tokenType == KarateTokenTypes.STEP_KEYWORD ||
-                builder.tokenType == KarateTokenTypes.ACTION_KEYWORD) {
+                builder.tokenType == KarateTokenTypes.ACTION_KEYWORD ||
+                builder.tokenType == KarateTokenTypes.ASTERISK) {
                 parseStep(builder)
             } else {
                 builder.advanceLexer()
@@ -82,7 +85,7 @@ class KarateParser : PsiParser {
 
     private fun parseStep(builder: PsiBuilder) {
         val marker = builder.mark()
-        builder.advanceLexer() // consume STEP_KEYWORD or ACTION_KEYWORD
+        builder.advanceLexer() // consume STEP_KEYWORD, ACTION_KEYWORD, or ASTERISK
         
         // Parse step content until end of line
         while (!builder.eof() && builder.tokenText != "\n") {

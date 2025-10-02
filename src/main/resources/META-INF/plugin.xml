@@ -21,8 +21,21 @@
                     <li>Go to Definition</li>
                     <li>Find Usages</li>
                     <li>Code Commenting</li>
+                    <li><strong>Comprehensive Code Formatting</strong> - Advanced formatting for Karate feature files with configurable indentation, spacing, table alignment, and more</li>
                     <li>Jira Issue Integration - Hover on @MBA-XXXXX tags and use Alt+Enter to open Jira issues in your default browser</li>
                </ul>
+          <br><br>
+          <strong>New in this version:</strong>
+          <ul>
+                <li>Complete code style formatting with 25+ configurable options</li>
+                <li>Table formatting with vertical pipe alignment</li>
+                <li>Scenario outline parameter alignment</li>
+                <li>Configurable indentation for all Karate elements</li>
+                <li>Smart spacing around keywords, operators, and tables</li>
+                <li>Blank line management between sections</li>
+                <li>Tag and comment formatting preservation</li>
+                <li>Post-processing for edge cases and special Karate syntax</li>
+          </ul>
           <br><br>
           Specifically made for App Team's MB project. If you are from another team and trying to copy this, goodluck :)
     ]]></description>
@@ -108,5 +121,24 @@
         <!-- Karate Feature Documentation Provider -->
         <lang.documentationProvider language="Karate"
                                    implementationClass="com.mb.mbplugin.karate.documentation.KarateFeatureDocumentationProvider"/>
+        
+        <!-- Code Formatting Support -->
+        <lang.formatter language="Karate"
+                       implementationClass="com.mb.mbplugin.karate.formatting.KarateFormattingModelBuilder"/>
+
+        <!-- Post Format Processor -->
+        <postFormatProcessor 
+            implementation="com.mb.mbplugin.karate.formatting.KaratePostFormatProcessor"/>
     </extensions>
+    
+    <!-- Actions -->
+    <actions>
+        <action id="FormatKarateTables" 
+                class="com.mb.mbplugin.karate.actions.FormatKarateTablesAction" 
+                text="Format Karate Tables" 
+                description="Format tables in Karate feature files">
+            <add-to-group group-id="CodeFormatGroup" anchor="after" relative-to-action="ReformatCode"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift T"/>
+        </action>
+    </actions>
 </idea-plugin>

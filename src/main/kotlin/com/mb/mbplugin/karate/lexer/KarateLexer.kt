@@ -46,6 +46,7 @@ class KarateLexer : LexerBase() {
             currentChar() == '#' -> readComment()
             currentChar() == '@' -> readTag()
             currentChar() == '|' -> readPipe()
+            currentChar() == '*' -> readAsterisk()
             currentChar() == '"' -> readQuotedString('"')
             currentChar() == '\'' -> readQuotedString('\'')
             currentChar() == ':' -> readColon()
@@ -90,6 +91,11 @@ class KarateLexer : LexerBase() {
     private fun readPipe() {
         position++ // skip '|'
         tokenType = KarateTokenTypes.PIPE
+    }
+
+    private fun readAsterisk() {
+        position++ // skip '*'
+        tokenType = KarateTokenTypes.ASTERISK
     }
 
     private fun readQuotedString(quote: Char) {
@@ -137,5 +143,5 @@ class KarateLexer : LexerBase() {
 
     private fun isKeywordStart(): Boolean = currentChar().isLetter()
 
-    private fun isSpecialChar(c: Char): Boolean = c in "@#|\"':"
+    private fun isSpecialChar(c: Char): Boolean = c in "@#|*\"':"
 }

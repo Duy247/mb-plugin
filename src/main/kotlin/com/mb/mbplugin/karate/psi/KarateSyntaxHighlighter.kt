@@ -31,6 +31,7 @@ class KarateSyntaxHighlighter(
             // Step keywords
             put(KarateTokenTypes.STEP_KEYWORD, GherkinHighlighter.STEP_KEYWORD)
             put(KarateTokenTypes.ACTION_KEYWORD, GherkinHighlighter.STEP_KEYWORD)
+            put(KarateTokenTypes.ASTERISK, GherkinHighlighter.STEP_KEYWORD)
             
             // Other elements
             put(KarateTokenTypes.COMMENT, GherkinHighlighter.COMMENT)

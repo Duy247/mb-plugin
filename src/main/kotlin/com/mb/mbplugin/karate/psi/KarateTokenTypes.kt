@@ -31,6 +31,8 @@ interface KarateTokenTypes {
         @JvmStatic
         val ACTION_KEYWORD = KarateElementType("ACTION_KEYWORD")
         @JvmStatic
+        val ASTERISK = KarateElementType("ASTERISK")
+        @JvmStatic
         val STEP_PARAMETER_BRACE = KarateElementType("STEP_PARAMETER_BRACE")
         @JvmStatic
         val STEP_PARAMETER_TEXT = KarateElementType("STEP_PARAMETER_TEXT")
@@ -67,7 +69,7 @@ interface KarateTokenTypes {
         val KEYWORDS = TokenSet.create(
             FEATURE_KEYWORD, RULE_KEYWORD, EXAMPLE_KEYWORD,
             BACKGROUND_KEYWORD, SCENARIO_KEYWORD, SCENARIO_OUTLINE_KEYWORD,
-            EXAMPLES_KEYWORD, ACTION_KEYWORD, STEP_KEYWORD
+            EXAMPLES_KEYWORD, ACTION_KEYWORD, STEP_KEYWORD, ASTERISK
         )
 
         @JvmStatic
