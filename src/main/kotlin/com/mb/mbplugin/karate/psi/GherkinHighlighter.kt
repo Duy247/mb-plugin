@@ -66,4 +66,64 @@ object GherkinHighlighter {
 
     @JvmStatic
     val PIPE = TextAttributesKey.createTextAttributesKey("GHERKIN_TABLE_PIPE", KEYWORD)
+
+    @JvmStatic
+    val KARATE_DSL_KEYWORD = TextAttributesKey.createTextAttributesKey(
+        "KARATE_DSL_KEYWORD",
+        DefaultLanguageHighlighterColors.KEYWORD
+    )
+
+    @JvmStatic
+    val HTTP_KEYWORD = TextAttributesKey.createTextAttributesKey(
+        "KARATE_HTTP_KEYWORD",
+        DefaultLanguageHighlighterColors.INSTANCE_METHOD
+    )
+
+    @JvmStatic
+    val TABLE_HEADER_CELL = TextAttributesKey.createTextAttributesKey(
+        "KARATE_TABLE_HEADER",
+        DefaultLanguageHighlighterColors.CLASS_NAME
+    )
+
+    @JvmStatic
+    val PLACEHOLDER_VARIABLE = TextAttributesKey.createTextAttributesKey(
+        "KARATE_PLACEHOLDER",
+        DefaultLanguageHighlighterColors.TEMPLATE_LANGUAGE_COLOR
+    )
+
+    @JvmStatic
+    val JSON_CONTENT = TextAttributesKey.createTextAttributesKey(
+        "KARATE_JSON",
+        DefaultLanguageHighlighterColors.BRACES
+    )
+
+    @JvmStatic
+    val XML_CONTENT = TextAttributesKey.createTextAttributesKey(
+        "KARATE_XML",
+        DefaultLanguageHighlighterColors.MARKUP_TAG
+    )
+    
+    @JvmStatic
+    val TABLE_FIRST_ROW = TextAttributesKey.createTextAttributesKey(
+        "KARATE_TABLE_FIRST_ROW",
+        DefaultLanguageHighlighterColors.INTERFACE_NAME
+    )
+    
+    @JvmStatic
+    val KARATE_FUNCTION = TextAttributesKey.createTextAttributesKey(
+        "KARATE_FUNCTION",
+        DefaultLanguageHighlighterColors.FUNCTION_DECLARATION
+    )
+    
+    @JvmStatic
+    val KARATE_OPERATOR = TextAttributesKey.createTextAttributesKey(
+        "KARATE_OPERATOR",
+        DefaultLanguageHighlighterColors.OPERATION_SIGN
+    )
+    
+    @JvmStatic
+    val EXAMPLE_VARIABLE = TextAttributesKey.createTextAttributesKey(
+        "KARATE_EXAMPLE_VARIABLE",
+        DefaultLanguageHighlighterColors.HIGHLIGHTED_REFERENCE
+    )
 }

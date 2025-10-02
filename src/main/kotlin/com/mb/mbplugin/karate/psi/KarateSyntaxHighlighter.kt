@@ -30,13 +30,17 @@ class KarateSyntaxHighlighter(
             
             // Step keywords
             put(KarateTokenTypes.STEP_KEYWORD, GherkinHighlighter.STEP_KEYWORD)
-            put(KarateTokenTypes.ACTION_KEYWORD, GherkinHighlighter.STEP_KEYWORD)
+            put(KarateTokenTypes.ACTION_KEYWORD, GherkinHighlighter.KARATE_FUNCTION)
             put(KarateTokenTypes.ASTERISK, GherkinHighlighter.STEP_KEYWORD)
+            
+            // Karate DSL keywords
+            put(KarateTokenTypes.KARATE_DSL_KEYWORD, GherkinHighlighter.KARATE_DSL_KEYWORD)
+            put(KarateTokenTypes.HTTP_KEYWORD, GherkinHighlighter.HTTP_KEYWORD)
             
             // Other elements
             put(KarateTokenTypes.COMMENT, GherkinHighlighter.COMMENT)
             put(KarateTokenTypes.TEXT, GherkinHighlighter.TEXT)
-            put(KarateTokenTypes.OPERATOR, GherkinHighlighter.TEXT)
+            put(KarateTokenTypes.OPERATOR, GherkinHighlighter.KARATE_OPERATOR)
             put(KarateTokenTypes.DECLARATION, GherkinHighlighter.KARATE_REFERENCE)
             put(KarateTokenTypes.VARIABLE, GherkinHighlighter.KARATE_VARIABLE)
             put(KarateTokenTypes.TAG, GherkinHighlighter.TAG)
@@ -44,11 +48,30 @@ class KarateSyntaxHighlighter(
             put(KarateTokenTypes.PYSTRING_INCOMPLETE, GherkinHighlighter.QUOTE)
             put(KarateTokenTypes.PYSTRING_QUOTES, GherkinHighlighter.QUOTE)
             put(JsonElementTypes.OBJECT, GherkinHighlighter.QUOTE)
+            
+            // Table elements
             put(KarateTokenTypes.TABLE_CELL, GherkinHighlighter.TABLE_CELL)
+            put(KarateTokenTypes.TABLE_HEADER_CELL, GherkinHighlighter.TABLE_FIRST_ROW)
             put(KarateTokenTypes.PIPE, GherkinHighlighter.PIPE)
+            
+            // String literals
             put(KarateTokenTypes.SINGLE_QUOTED_STRING, GherkinHighlighter.QUOTE)
             put(KarateTokenTypes.DOUBLE_QUOTED_STRING, GherkinHighlighter.QUOTE)
+            
+            // Variables and placeholders
+            put(KarateTokenTypes.PLACEHOLDER_START, GherkinHighlighter.PLACEHOLDER_VARIABLE)
+            put(KarateTokenTypes.PLACEHOLDER_END, GherkinHighlighter.PLACEHOLDER_VARIABLE)
+            put(KarateTokenTypes.PLACEHOLDER_CONTENT, GherkinHighlighter.PLACEHOLDER_VARIABLE)
+            put(KarateTokenTypes.EXAMPLE_VARIABLE, GherkinHighlighter.EXAMPLE_VARIABLE)
+            
+            // JSON and XML content
+            put(KarateTokenTypes.JSON_START, GherkinHighlighter.JSON_CONTENT)
+            put(KarateTokenTypes.JSON_END, GherkinHighlighter.JSON_CONTENT)
+            put(KarateTokenTypes.XML_START, GherkinHighlighter.XML_CONTENT)
+            put(KarateTokenTypes.XML_END, GherkinHighlighter.XML_CONTENT)
+            
             put(KarateTokenTypes.JSON_INJECTABLE, GherkinHighlighter.KARATE_REFERENCE)
+            put(KarateTokenTypes.COLON, GherkinHighlighter.KARATE_OPERATOR)
         }
         
         private val JSON_HIGHLIGHTER = Json5SyntaxHighlightingFactory()
