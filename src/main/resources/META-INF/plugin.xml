@@ -19,25 +19,12 @@
                     <li>Syntax Highlighting</li>
                     <li>Code Completion</li>
                     <li>Go to Definition</li>
-                    <li>Find Usages</li>
                     <li>Code Commenting</li>
-                    <li><strong>Comprehensive Code Formatting</strong> - Advanced formatting for Karate feature files with configurable indentation, spacing, table alignment, and more</li>
-                    <li>Jira Issue Integration - Hover on @MBA-XXXXX tags and use Alt+Enter to open Jira issues in your default browser</li>
+                    <li>Feature Formating</li>
+                    <li>Jira Issue Integration</li>
                </ul>
           <br><br>
-          <strong>New in this version:</strong>
-          <ul>
-                <li>Complete code style formatting with 25+ configurable options</li>
-                <li>Table formatting with vertical pipe alignment</li>
-                <li>Scenario outline parameter alignment</li>
-                <li>Configurable indentation for all Karate elements</li>
-                <li>Smart spacing around keywords, operators, and tables</li>
-                <li>Blank line management between sections</li>
-                <li>Tag and comment formatting preservation</li>
-                <li>Post-processing for edge cases and special Karate syntax</li>
-          </ul>
-          <br><br>
-          Specifically made for App Team's MB project. If you are from another team and trying to copy this, goodluck :)
+          Specifically made for App Team's MB project
     ]]></description>
 
     <!-- Product and plugin compatibility requirements.

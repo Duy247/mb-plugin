@@ -29,7 +29,13 @@ class KarateBlock(
             if (child.elementType != TokenType.WHITE_SPACE && child.textLength > 0) {
                 val childWrap = getChildWrap(child)
                 val childAlignment = getChildAlignment(child)
-                val childIndent = getChildIndent(child)
+                
+                // Force special indentation for background elements at the root level
+                val childIndent = if (isBackgroundKeyword(child.elementType)) {
+                    Indent.getSpaceIndent(KarateCodeStyleSettings.BACKGROUND_INDENT)
+                } else {
+                    getChildIndent(child)
+                }
                 
                 blocks.add(
                     KarateBlock(
@@ -73,16 +79,22 @@ class KarateBlock(
                 ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.SCENARIO_INDENT), null)
             }
             
-            // Background should be indented like scenarios
-            elementType == KarateTokenTypes.BACKGROUND_KEYWORD -> {
-                ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT), null)
+            // Background should use its own indent setting
+            isBackgroundKeyword(elementType) -> {
+                ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.BACKGROUND_INDENT), null)
             }
             
-            // Steps should be indented from Scenario
+            // Steps should be indented appropriately from their parent
             elementType == KarateTokenTypes.STEP_KEYWORD || 
             elementType == KarateTokenTypes.ACTION_KEYWORD ||
             elementType == KarateTokenTypes.ASTERISK -> {
-                ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT), null)
+                if (isDirectChildOfBackground()) {
+                    // Use BACKGROUND_INDENT directly for Background steps
+                    ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.BACKGROUND_INDENT), null)
+                } else {
+                    // Use STEP_INDENT for other steps
+                    ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT), null)
+                }
             }
             
             // Table cells should be aligned
@@ -176,19 +188,23 @@ class KarateBlock(
                 Indent.getSpaceIndent(KarateCodeStyleSettings.SCENARIO_INDENT)
             }
             
-            // Background indented from Feature like scenarios
-            elementType == KarateTokenTypes.BACKGROUND_KEYWORD -> {
-                Indent.getSpaceIndent(KarateCodeStyleSettings.SCENARIO_INDENT)
+            // Background gets its own indentation
+            isBackgroundKeyword(elementType) -> {
+                Indent.getSpaceIndent(KarateCodeStyleSettings.BACKGROUND_INDENT)
             }
             
             // Steps indented from Scenario or Background
             (elementType == KarateTokenTypes.STEP_KEYWORD || 
              elementType == KarateTokenTypes.ACTION_KEYWORD ||
              elementType == KarateTokenTypes.ASTERISK) -> {
-                when (parentType) {
-                    KarateTokenTypes.BACKGROUND_KEYWORD -> Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT)
-                    else -> Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT)
+                // For steps under Background, use BACKGROUND_INDENT directly to prevent stacking
+                val indent = if (isDirectChildOfBackground()) {
+                    // Directly use BACKGROUND_INDENT for steps under Background
+                    KarateCodeStyleSettings.BACKGROUND_INDENT
+                } else {
+                    KarateCodeStyleSettings.STEP_INDENT
                 }
+                Indent.getSpaceIndent(indent)
             }
             
             // Table cells need to be indented from steps
@@ -227,8 +243,14 @@ class KarateBlock(
      */
     private fun isScenarioKeyword(elementType: com.intellij.psi.tree.IElementType): Boolean {
         return KarateTokenTypes.SCENARIOS_KEYWORDS.contains(elementType) ||
-               elementType == KarateTokenTypes.BACKGROUND_KEYWORD ||
                elementType == KarateTokenTypes.RULE_KEYWORD
+    }
+    
+    /**
+     * Helper method to check if element type is a background keyword
+     */
+    private fun isBackgroundKeyword(elementType: com.intellij.psi.tree.IElementType): Boolean {
+        return elementType == KarateTokenTypes.BACKGROUND_KEYWORD
     }
 
     /**
@@ -268,5 +290,42 @@ class KarateBlock(
         }
         
         return openQuotes == closeQuotes && openQuotes > 0
+    }
+    
+    /**
+     * Checks if the current node is a direct child of a Background element
+     * Used to apply correct indentation for steps under Background
+     */
+    private fun isDirectChildOfBackground(): Boolean {
+        val parent = myNode.treeParent
+        return parent != null && parent.elementType == KarateTokenTypes.BACKGROUND_KEYWORD
+    }
+
+    /**
+     * Checks if the current node is after a Background: keyword
+     * This helps handle proper indentation whether Background: is on its own line or not
+     */
+    private fun isAfterBackgroundKeyword(): Boolean {
+        var prevSibling = myNode.treePrev
+        while (prevSibling != null) {
+            if (prevSibling.elementType == KarateTokenTypes.BACKGROUND_KEYWORD) {
+                return true
+            }
+            prevSibling = prevSibling.treePrev
+        }
+        
+        // Also check parent's previous siblings (for nested elements)
+        val parent = myNode.treeParent
+        if (parent != null) {
+            prevSibling = parent.treePrev
+            while (prevSibling != null) {
+                if (prevSibling.elementType == KarateTokenTypes.BACKGROUND_KEYWORD) {
+                    return true
+                }
+                prevSibling = prevSibling.treePrev
+            }
+        }
+        
+        return false
     }
 }

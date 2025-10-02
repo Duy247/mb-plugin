@@ -181,7 +181,17 @@ class KarateLexer : LexerBase() {
         }
         
         val text = buffer!!.subSequence(start, position).toString().lowercase()
-        tokenType = when (text) {
+        
+        // Remember the position after the keyword but before any colon
+        val keywordEnd = position
+        val keywordText = text
+        
+        // Check if the next character is a colon for keywords that need it
+        val keywordNeedsColon = text in setOf("feature", "background", "scenario", "examples", "rule", "example")
+        val followedByColon = position < endOffset && currentChar() == ':'
+        
+        // Set the token type based on the keyword text
+        tokenType = when (keywordText) {
             "feature" -> KarateTokenTypes.FEATURE_KEYWORD
             "background" -> KarateTokenTypes.BACKGROUND_KEYWORD
             "scenario" -> KarateTokenTypes.SCENARIO_KEYWORD
@@ -194,11 +204,22 @@ class KarateLexer : LexerBase() {
             else -> {
                 // Check if this might be a Karate action keyword
                 when {
-                    text in setOf("match", "assert", "print", "call", "read", "set", "remove", "replace", "eval") -> 
+                    keywordText in setOf("match", "assert", "print", "call", "read", "set", "remove", "replace", "eval") -> 
                         KarateTokenTypes.ACTION_KEYWORD
                     else -> KarateTokenTypes.TEXT
                 }
             }
+        }
+        
+        // If there's a colon right after a keyword that requires it, we'll handle it
+        // by marking the current token end (which will return just the keyword)
+        if (keywordNeedsColon && followedByColon) {
+            // End the current token at the keyword boundary
+            tokenEnd = keywordEnd
+            
+            // The next call to advance() will find the colon and emit it as a separate token
+            // This allows the formatter to apply spacing after the colon
+            return
         }
     }
 
@@ -367,15 +388,24 @@ class KarateLexer : LexerBase() {
     
     private fun peekMultiWordKeyword(): Boolean {
         val remaining = buffer!!.subSequence(position, endOffset).toString().lowercase()
-        return remaining.startsWith("scenario outline")
+        return remaining.startsWith("scenario outline") || remaining.startsWith("scenario outline:")
     }
     
     private fun readMultiWordKeyword() {
         val remaining = buffer!!.subSequence(position, endOffset).toString().lowercase()
+        
         when {
             remaining.startsWith("scenario outline") -> {
                 position += "scenario outline".length
                 tokenType = KarateTokenTypes.SCENARIO_OUTLINE_KEYWORD
+                
+                // Check if the next character is a colon, but don't consume it
+                // It will be handled as a separate token in the next advance() call
+                if (position < endOffset && currentChar() == ':') {
+                    // End the current token at the "scenario outline" boundary
+                    tokenEnd = position
+                    return
+                }
             }
         }
     }

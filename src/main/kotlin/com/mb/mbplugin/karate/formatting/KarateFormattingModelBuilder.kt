@@ -37,15 +37,15 @@ class KarateFormattingModelBuilder : FormattingModelBuilder {
     private fun createSpacingBuilder(settings: CodeStyleSettings): SpacingBuilder {
         return SpacingBuilder(settings, KarateLanguage.INSTANCE)
             // Feature header spacing
-            .after(KarateTokenTypes.FEATURE_KEYWORD).spaces(1)
-            .after(KarateTokenTypes.COLON).spaces(KarateCodeStyleSettings.SPACES_AFTER_COLON)
+            .after(KarateTokenTypes.FEATURE_KEYWORD).spaces(0)  // No space before colon
+            .after(KarateTokenTypes.COLON).spaces(KarateCodeStyleSettings.SPACES_AFTER_COLON)  // Configurable space after colon
             
-            // Scenario spacing  
-            .after(KarateTokenTypes.SCENARIO_KEYWORD).spaces(1)
-            .after(KarateTokenTypes.SCENARIO_OUTLINE_KEYWORD).spaces(1)
-            .after(KarateTokenTypes.EXAMPLE_KEYWORD).spaces(1)
-            .after(KarateTokenTypes.BACKGROUND_KEYWORD).spaces(1)
-            .after(KarateTokenTypes.RULE_KEYWORD).spaces(1)
+            // Scenario spacing - no space between keyword and colon  
+            .after(KarateTokenTypes.SCENARIO_KEYWORD).spaces(0)
+            .after(KarateTokenTypes.SCENARIO_OUTLINE_KEYWORD).spaces(0)
+            .after(KarateTokenTypes.EXAMPLE_KEYWORD).spaces(0)
+            .after(KarateTokenTypes.BACKGROUND_KEYWORD).spaces(0)
+            .after(KarateTokenTypes.RULE_KEYWORD).spaces(0)
             
             // Step keywords spacing
             .after(KarateTokenTypes.STEP_KEYWORD).spaces(1)

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.0.3"
+version = "1.0.4"
 
 repositories {
     mavenCentral()
@@ -35,11 +35,12 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Version 1.0.3
-            - Added Jira Integration: Hover on @MBA-XXXXX tags and use Alt+Enter to open Jira issues in default browser
-            - Configurable Jira base URL in Settings > Tools > Jira Integration
-            - Gutter icons for quick access to Jira issues
-            - Previous features: Karate language support, syntax highlighting, code completion
+            <h3>Version 1.0.4</h3>
+            <ul>
+              <li>Syntax Highlighting</li>
+              <li>Feature Format</li>
+              <li>Previous features: Jira Integration with gutter icon</li>
+            </ul>
         """.trimIndent()
     }
 }
