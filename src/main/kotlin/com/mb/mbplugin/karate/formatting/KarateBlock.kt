@@ -112,7 +112,12 @@ class KarateBlock(
                 ChildAttributes(Indent.getNoneIndent(), null)
             }
             
-            // Doc strings preserve their content
+            // Doc strings opening/closing quotes should align with step
+            elementType == KarateTokenTypes.PYSTRING_QUOTES -> {
+                ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT), null)
+            }
+            
+            // Doc strings content needs additional indentation
             elementType == KarateTokenTypes.PYSTRING -> {
                 ChildAttributes(Indent.getSpaceIndent(KarateCodeStyleSettings.DOC_STRING_CONTENT_INDENT), null)
             }
@@ -217,7 +222,14 @@ class KarateBlock(
                 Indent.getSpaceIndent(KarateCodeStyleSettings.TABLE_CELL_INDENT)
             }
             
+            // For docstrings, handle opening/closing quotes and content differently
+            elementType == KarateTokenTypes.PYSTRING_QUOTES -> {
+                // Align docstring quotes with the step
+                Indent.getSpaceIndent(KarateCodeStyleSettings.STEP_INDENT)
+            }
+            
             elementType == KarateTokenTypes.PYSTRING -> {
+                // Content inside docstrings gets additional indent
                 Indent.getSpaceIndent(KarateCodeStyleSettings.DOC_STRING_CONTENT_INDENT)
             }
             

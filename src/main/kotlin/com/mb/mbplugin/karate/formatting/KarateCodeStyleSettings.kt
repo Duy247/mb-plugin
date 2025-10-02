@@ -13,7 +13,7 @@ object KarateCodeStyleSettings {
     const val STEP_INDENT = 2
     const val TABLE_CELL_INDENT = 6
     const val EXAMPLES_INDENT = 2
-    const val DOC_STRING_CONTENT_INDENT = 0
+    const val DOC_STRING_CONTENT_INDENT = 4
     
     // ============= SPACING SETTINGS =============
     const val SPACES_AROUND_PIPE = 1

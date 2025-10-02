@@ -2,6 +2,7 @@ package com.mb.mbplugin.karate.lexer
 
 import com.intellij.lexer.LexerBase
 import com.intellij.psi.tree.IElementType
+import com.intellij.psi.TokenType
 import com.mb.mbplugin.karate.psi.KarateTokenTypes
 
 class KarateLexer : LexerBase() {
@@ -67,19 +68,17 @@ class KarateLexer : LexerBase() {
             currentChar() == '@' -> readTag()
             currentChar() == '|' -> readPipe()
             currentChar() == '*' -> readAsterisk()
+            isDocStringStart() -> readDocString()
             currentChar() == '"' -> readQuotedString('"')
             currentChar() == '\'' -> readQuotedString('\'')
             currentChar() == ':' -> readColon()
-            currentChar() == '<' && isPlaceholderStart() -> readPlaceholder()
-            isJsonContentStart() -> readJsonContent()  // Use the new method for full JSON content
-            currentChar() == '{' -> readJsonStart()
-            currentChar() == '}' -> readJsonEnd()
-            isXmlContentStart() -> readXmlContent()    // Use the new method for full XML content
-            currentChar() == '<' && !isPlaceholderStart() -> readXmlStart()
-            currentChar() == '>' -> readXmlEnd()
+            // Treat all braces and angle brackets as simple text - no special JSON or XML handling
+            currentChar() == '{' -> readSimpleBrace('{')
+            currentChar() == '}' -> readSimpleBrace('}')
+            currentChar() == '<' -> readSimpleAngleBracket('<')
+            currentChar() == '>' -> readSimpleAngleBracket('>')
             isInTableRow && !isWhitespace(currentChar()) && currentChar() != '\n' -> readTableCell()
             isKeywordStart() -> readKeywordOrText()
-            isParameterJsonStart() -> readParameterJson() // Handle JSON parameters specially
             else -> readText()
         }
         
@@ -110,7 +109,14 @@ class KarateLexer : LexerBase() {
         while (position < endOffset && isWhitespace(currentChar())) {
             position++
         }
-        tokenType = com.intellij.psi.TokenType.WHITE_SPACE
+        tokenType = TokenType.WHITE_SPACE
+    }
+    
+    // Helper method to skip whitespaces without creating a token
+    private fun skipWhitespaces() {
+        while (position < endOffset && isWhitespace(currentChar())) {
+            position++
+        }
     }
 
     private fun readComment() {
@@ -166,6 +172,21 @@ class KarateLexer : LexerBase() {
     private fun readColon() {
         position++
         tokenType = KarateTokenTypes.COLON
+    }
+    
+    // Check if we're at the start of a docstring (triple quotes)
+    private fun isDocStringStart(): Boolean {
+        return position + 2 < endOffset && 
+               currentChar() == '"' && 
+               buffer!![position + 1] == '"' && 
+               buffer!![position + 2] == '"'
+    }
+    
+    // Handle docstring quotes
+    private fun readDocString() {
+        // Handle opening/closing quotes
+        position += 3  // Skip the three quotes
+        tokenType = KarateTokenTypes.PYSTRING_QUOTES
     }
 
     private fun readKeywordOrText() {
@@ -249,10 +270,15 @@ class KarateLexer : LexerBase() {
     private fun isSpecialChar(c: Char): Boolean = c in "@#|*\"':<>{}"
 
     // New helper methods for enhanced functionality
+    // Commented out as we now treat all angle brackets as simple text
+    /*
     private fun isPlaceholderStart(): Boolean {
         return position + 1 < endOffset && (buffer!![position + 1].isLetterOrDigit() || buffer!![position + 1] == '_')
     }
+    */
     
+    // Commented out as we now treat all angle brackets as simple text
+    /*
     private fun readPlaceholder() {
         position++ // skip '<'
         
@@ -287,128 +313,39 @@ class KarateLexer : LexerBase() {
             tokenType = KarateTokenTypes.PLACEHOLDER_START
         }
     }
+    */
     
-    private fun readJsonStart() {
-        position++ // skip '{'
-        tokenType = KarateTokenTypes.JSON_START
+    // Simple function to treat braces as plain text
+    private fun readSimpleBrace(brace: Char) {
+        position++ // Skip the brace character
+        tokenType = KarateTokenTypes.TEXT // Treat it as plain text
     }
     
-    private fun readJsonEnd() {
-        position++ // skip '}'
-        tokenType = KarateTokenTypes.JSON_END
-    }
-    
-    // Helper methods for JSON parsing
-    private fun isJsonContentStart(): Boolean {
-        return currentChar() == '{'
-    }
-    
-    // Check if we're at the start of a JSON parameter (common in call statements)
-    private fun isParameterJsonStart(): Boolean {
-        // Look back for indications that this is a parameter JSON
-        // Like "call(...) {"
-        var lookback = position - 1
-        while (lookback >= startOffset && isWhitespace(buffer!![lookback])) {
-            lookback--
-        }
-        return currentChar() == '{' && lookback >= startOffset && 
-               (buffer!![lookback] == ')' || buffer!![lookback] == '\'')
-    }
-    
-    // Handle JSON parameters in call statements
-    private fun readParameterJson() {
-        tokenStart = position
-        tokenType = KarateTokenTypes.JSON_START
-        position++  // Skip the opening brace
-        
-        // This method just handles the opening brace
-        // Subsequent calls to advance() will handle the content and closing brace
-    }
-    
-    private fun readJsonContent() {
-        // This is a simplified JSON parser
-        // In a real implementation, we'd use a more sophisticated approach
-        var depth = 1  // Already saw one opening brace
-        position++     // Skip the opening brace
-        
-        while (position < endOffset && depth > 0) {
-            when (currentChar()) {
-                '{' -> depth++
-                '}' -> depth--
-                '"' -> skipJsonString()
-                '\'' -> skipJsonString('\'')
-            }
-            if (position < endOffset && depth > 0) {
-                position++
-            }
-        }
-        
-        // Make sure we correctly handle the closing brace
-        if (position < endOffset && currentChar() == '}') {
-            position++  // Consume the closing brace
-        }
-        
-        tokenType = KarateTokenTypes.JSON_INJECTABLE
+    // Simple function to treat angle brackets as plain text
+    private fun readSimpleAngleBracket(bracket: Char) {
+        position++ // Skip the bracket character
+        tokenType = KarateTokenTypes.TEXT // Treat it as plain text
     }
     
     private fun skipJsonString(quote: Char = '"') {
         position++  // Skip the opening quote
+        
         while (position < endOffset && currentChar() != quote) {
-            // Handle escaped quotes
+            // Handle escaped quotes and other escaped characters
             if (currentChar() == '\\' && position + 1 < endOffset) {
-                position += 2  // Skip the escape and the character
+                position += 2  // Skip the escape and the next character
             } else {
                 position++
             }
         }
+        
         // Skip the closing quote
         if (position < endOffset) {
             position++
         }
     }
     
-    private fun readXmlStart() {
-        position++ // skip '<'
-        tokenType = KarateTokenTypes.XML_START
-    }
-    
-    private fun readXmlEnd() {
-        position++ // skip '>'
-        tokenType = KarateTokenTypes.XML_END
-    }
-    
-    // Helper methods for XML parsing
-    private fun isXmlContentStart(): Boolean {
-        return currentChar() == '<' && !isPlaceholderStart()
-    }
-    
-    private fun readXmlContent() {
-        // This is a simplified XML parser
-        // In a real implementation, we'd use a more sophisticated approach
-        position++ // Skip the opening '<'
-        
-        // Find matching closing tag
-        var depth = 1
-        while (position < endOffset && depth > 0) {
-            when {
-                currentChar() == '<' && lookAhead(1) != '/' -> {
-                    depth++
-                    position++
-                }
-                currentChar() == '<' && lookAhead(1) == '/' -> {
-                    depth--
-                    position += 2 // Skip '</' together
-                }
-                currentChar() == '>' -> {
-                    position++
-                    if (depth == 0) break
-                }
-                else -> position++
-            }
-        }
-        
-        tokenType = KarateTokenTypes.XML_START // Using XML_START as a catch-all for XML content
-    }
+    // XML-specific parsing methods removed - now using readSimpleAngleBracket instead
     
     private fun lookAhead(offset: Int): Char {
         return if (position + offset < endOffset) buffer!![position + offset] else '\u0000'
