@@ -104,5 +104,9 @@
         <!-- Jira Issue Line Marker Provider -->
         <codeInsight.lineMarkerProvider language="Karate"
                                         implementationClass="com.mb.mbplugin.jira.JiraIssueLineMarkerProvider"/>
+        
+        <!-- Karate Feature Documentation Provider -->
+        <lang.documentationProvider language="Karate"
+                                   implementationClass="com.mb.mbplugin.karate.documentation.KarateFeatureDocumentationProvider"/>
     </extensions>
 </idea-plugin>
