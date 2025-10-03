@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.0.4"
+version = "1.1.0"
 
 repositories {
     mavenCentral()
@@ -25,6 +25,8 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.modules.json")
         bundledPlugin("org.intellij.intelliLang")
+        
+        // The required plugins are defined in plugin.xml
     }
 }
 
@@ -35,11 +37,12 @@ intellijPlatform {
         }
 
         changeNotes = """
-            <h3>Version 1.0.4</h3>
+            <h3>Version 1.1.0</h3>
             <ul>
-              <li>Syntax Highlighting</li>
-              <li>Feature Format</li>
-              <li>Previous features: Jira Integration with gutter icon</li>
+              <li>Major change: Now using standard Gherkin plugin for syntax highlighting and formatting</li>
+              <li>Maintained custom functionality: Go to definition for call read, autocomplete, documentation view, and JIRA integration</li>
+              <li>Improved compatibility with standard Cucumber/Gherkin tools</li>
+              <li>Removed custom formatting in favor of Gherkin's native formatting</li>
             </ul>
         """.trimIndent()
     }

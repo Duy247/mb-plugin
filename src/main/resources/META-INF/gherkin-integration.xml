@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Find Usages Provider -->
+        <lang.findUsagesProvider language="Gherkin"
+                                 implementationClass="com.mb.mbplugin.karate.psi.KarateFindUsagesProvider"/>
+        
+        <!-- Reference Contributor for Go-To Definition -->
+        <psi.referenceContributor language="Gherkin"
+                                  implementation="com.mb.mbplugin.karate.steps.reference.KarateReferenceContributor"/>
+        
+        <!-- Commenter -->
+        <lang.commenter language="Gherkin"
+                        implementationClass="com.mb.mbplugin.karate.psi.GherkinCommenter"/>
+        
+        <!-- Tag Completion Contributor -->
+        <completion.contributor language="Gherkin"
+                               implementationClass="com.mb.mbplugin.karate.completion.KarateTagCompletionContributor"/>
+        
+        <!-- Jira Issue Line Marker Provider - Note: Should be updated to target leaf elements -->
+        <codeInsight.lineMarkerProvider language="Gherkin"
+                                        implementationClass="com.mb.mbplugin.jira.JiraIssueLineMarkerProvider"/>
+        
+        <!-- Karate Feature Documentation Provider -->
+        <lang.documentationProvider language="Gherkin"
+                                   implementationClass="com.mb.mbplugin.karate.documentation.KarateFeatureDocumentationProvider"/>
+    </extensions>
+</idea-plugin>

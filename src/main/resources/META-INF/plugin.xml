@@ -5,7 +5,7 @@
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
-    <name>MBKarate For AutoTest</name>
+        <name>MBKarate For AutoTest</name>
 
     <vendor>Duy Van Thanh</vendor>
 
@@ -16,13 +16,14 @@
         <br><br>
             Features:
                <ul>
-                    <li>Syntax Highlighting</li>
-                    <li>Code Completion</li>
-                    <li>Go to Definition</li>
-                    <li>Code Commenting</li>
-                    <li>Feature Formating</li>
-                    <li>Jira Issue Integration</li>
+                    <li>Go to Definition for call read</li>
+                    <li>Indexing and Autocomplete for call read (file and scenario tags)</li>
+                    <li>Documentation View</li>
+                    <li>Jira Issue Integration with gutter icons</li>
                </ul>
+          <br><br>
+          This plugin utilizes the standard Gherkin/Cucumber plugins for syntax highlighting and formatting,
+          while providing specialized features for Karate test automation.
           <br><br>
           Specifically made for App Team's MB project
     ]]></description>
@@ -33,6 +34,8 @@
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>org.intellij.intelliLang</depends>
+    <depends optional="true" config-file="gherkin-integration.xml">gherkin</depends>
+    <depends optional="true">org.jetbrains.plugins.cucumber.steps</depends>
 
     <!-- Project Services -->
     <projectListeners>
@@ -43,45 +46,14 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Karate File Type -->
-        <fileType name="Karate"
-                  implementationClass="com.mb.mbplugin.karate.psi.GherkinFileType"
-                  fieldName="INSTANCE" language="Karate" extensions="feature"/>
-        
-        <!-- Syntax Highlighting -->
-        <lang.syntaxHighlighterFactory language="Karate"
-                                       implementationClass="com.mb.mbplugin.karate.psi.GherkinSyntaxHighlighterFactory"/>
-        
-        <!-- Parser Definition -->
-        <lang.parserDefinition language="Karate"
-                               implementationClass="com.mb.mbplugin.karate.psi.KarateParserDefinition"/>
-        
-        <!-- Find Usages Provider -->
-        <lang.findUsagesProvider language="Karate"
-                                 implementationClass="com.mb.mbplugin.karate.psi.KarateFindUsagesProvider"/>
-        
-        <!-- Reference Contributor for Go-To Definition -->
-        <psi.referenceContributor language="Karate"
-                                  implementation="com.mb.mbplugin.karate.steps.reference.KarateReferenceContributor"/>
+        <!-- Core functionality that doesn't depend on Gherkin -->
         
         <!-- Go To Declaration Handler -->
         <gotoDeclarationHandler
                 implementation="com.mb.mbplugin.karate.navigation.KarateGoToSymbolProvider"/>
         
-        <!-- Color Settings Page -->
-        <colorSettingsPage
-                implementation="com.mb.mbplugin.karate.psi.GherkinColorsPage"/>
-        
-        <!-- Commenter -->
-        <lang.commenter language="Karate"
-                        implementationClass="com.mb.mbplugin.karate.psi.GherkinCommenter"/>
-        
         <!-- Feature File Index -->
         <fileBasedIndex implementation="com.mb.mbplugin.karate.index.KarateFeatureIndex"/>
-        
-        <!-- Tag Completion Contributor -->
-        <completion.contributor language="Karate"
-                               implementationClass="com.mb.mbplugin.karate.completion.KarateTagCompletionContributor"/>
         
         <!-- Jira Integration Settings -->
         <projectConfigurable
@@ -100,32 +72,11 @@
             <category>Jira Integration</category>
             <className>com.mb.mbplugin.jira.OpenMultipleJiraIssuesIntention</className>
         </intentionAction>
-        
-        <!-- Jira Issue Line Marker Provider -->
-        <codeInsight.lineMarkerProvider language="Karate"
-                                        implementationClass="com.mb.mbplugin.jira.JiraIssueLineMarkerProvider"/>
-        
-        <!-- Karate Feature Documentation Provider -->
-        <lang.documentationProvider language="Karate"
-                                   implementationClass="com.mb.mbplugin.karate.documentation.KarateFeatureDocumentationProvider"/>
-        
-        <!-- Code Formatting Support -->
-        <lang.formatter language="Karate"
-                       implementationClass="com.mb.mbplugin.karate.formatting.KarateFormattingModelBuilder"/>
 
-        <!-- Post Format Processor -->
-        <postFormatProcessor 
-            implementation="com.mb.mbplugin.karate.formatting.KaratePostFormatProcessor"/>
     </extensions>
     
-    <!-- Actions -->
+    <!-- Actions (Removed Karate Tables formatter as we're using Gherkin plugin for formatting) -->
     <actions>
-        <action id="FormatKarateTables" 
-                class="com.mb.mbplugin.karate.actions.FormatKarateTablesAction" 
-                text="Format Karate Tables" 
-                description="Format tables in Karate feature files">
-            <add-to-group group-id="CodeFormatGroup" anchor="after" relative-to-action="ReformatCode"/>
-            <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt shift T"/>
-        </action>
+        <!-- Custom actions can be added here if needed in the future -->
     </actions>
 </idea-plugin>
