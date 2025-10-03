@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <!-- This file contains extensions that depend on the cucumber.steps plugin -->
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add cucumber.steps-dependent extensions here if needed -->
+    </extensions>
+</idea-plugin>

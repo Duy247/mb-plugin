@@ -35,7 +35,7 @@
     <depends>com.intellij.modules.json</depends>
     <depends>org.intellij.intelliLang</depends>
     <depends optional="true" config-file="gherkin-integration.xml">gherkin</depends>
-    <depends optional="true">org.jetbrains.plugins.cucumber.steps</depends>
+    <depends optional="true" config-file="cucumber-steps-integration.xml">org.jetbrains.plugins.cucumber.steps</depends>
     
     <!-- File type handling -->
     <xi:include href="/META-INF/fileType.xml" xpointer="xpointer(/idea-plugin/*)"
