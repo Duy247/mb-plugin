@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.1.0"
+version = "1.1.1"
 
 repositories {
     mavenCentral()
@@ -42,10 +42,7 @@ intellijPlatform {
         changeNotes = """
             <h3>Version 1.1.0</h3>
             <ul>
-              <li>Major change: Now using standard Gherkin plugin for syntax highlighting and formatting</li>
-              <li>Maintained custom functionality: Go to definition for call read, autocomplete, documentation view, and JIRA integration</li>
-              <li>Improved compatibility with standard Cucumber/Gherkin tools</li>
-              <li>Removed custom formatting in favor of Gherkin's native formatting</li>
+              <li>Minor change: Left alignment on docview</li>
             </ul>
         """.trimIndent()
     }
