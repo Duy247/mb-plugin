@@ -17,9 +17,13 @@
         <completion.contributor language="Gherkin"
                                implementationClass="com.mb.mbplugin.karate.completion.KarateTagCompletionContributor"/>
         
-        <!-- Jira Issue Line Marker Provider - Note: Should be updated to target leaf elements -->
+        <!-- Jira Issue Line Marker Provider - Only for GherkinTag elements -->
         <codeInsight.lineMarkerProvider language="Gherkin"
-                                        implementationClass="com.mb.mbplugin.jira.JiraIssueLineMarkerProvider"/>
+                                        implementationClass="com.mb.mbplugin.jira.JiraIssueLineMarkerProvider">
+            <targetElementPattern language="Gherkin">
+                <instanceof class="org.jetbrains.plugins.cucumber.psi.GherkinTag"/>
+            </targetElementPattern>
+        </codeInsight.lineMarkerProvider>
         
         <!-- Karate Feature Documentation Provider -->
         <lang.documentationProvider language="Gherkin"

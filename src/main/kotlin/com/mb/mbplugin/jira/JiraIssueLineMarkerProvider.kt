@@ -17,20 +17,26 @@ import javax.swing.Icon
 class JiraIssueLineMarkerProvider : LineMarkerProvider {
     
     companion object {
+        // Specific pattern for Jira issues in the MBA format
         private val JIRA_ISSUE_PATTERN = Regex("@(MBA-\\d+)")
         private val JIRA_ICON: Icon = IconLoader.getIcon("/icons/jira-icon.svg", JiraIssueLineMarkerProvider::class.java)
     }
     
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
+        // Look for the TAG leaf element (not the GherkinTag parent)
+        if (element.elementType?.toString() != "Gherkin:TAG") {
+            return null
+        }
+        
+        // Make sure it contains an MBA tag
+        if (!element.text.contains("MBA-")) {
+            return null
+        }
+        
         val text = element.text
         val matches = JIRA_ISSUE_PATTERN.findAll(text).toList()
         
         if (matches.isEmpty()) return null
-        
-        // Only show gutter icon for tag elements, not for Feature or Background keywords
-        if (!isTagElement(element)) {
-            return null
-        }
         
         // For multiple matches, create marker for the first one but show all in tooltip
         val firstMatch = matches.first()
@@ -92,32 +98,7 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         )
     }
     
-    private fun isTagElement(element: PsiElement): Boolean {
-        // Check if this is the TAG token in Gherkin PSI
-        val elementType = element.elementType
-        if (elementType != null && elementType.toString() == "Gherkin:TAG_NAME") {
-            return true
-        }
-        
-        // Check if this element is part of a tag (child of tag element)
-        var parent = element.parent
-        while (parent != null) {
-            if (parent is GherkinTag) {
-                return true
-            }
-            parent = parent.parent
-        }
-        
-        // Explicitly exclude Feature and Background keywords even if they contain MBA tags
-        val text = element.text.trim()
-        if (text.lowercase().startsWith("feature") || text.lowercase().startsWith("background")) {
-            return false
-        }
-        
-        // For other elements, check if it's a tag by looking at the text pattern and context
-        // Allow if element text starts with @ or contains tag-like patterns
-        return text.startsWith("@") || text.contains("@MBA-")
-    }
+    // We've removed the isTagElement method and moved the check directly to getLineMarkerInfo
     
     private fun showIssueSelectionMenu(
         project: Project, 
