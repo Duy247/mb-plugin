@@ -17,19 +17,13 @@ import javax.swing.Icon
 class JiraIssueLineMarkerProvider : LineMarkerProvider {
     
     companion object {
-        // Specific pattern for Jira issues in the MBA format
         private val JIRA_ISSUE_PATTERN = Regex("@(MBA-\\d+)")
         private val JIRA_ICON: Icon = IconLoader.getIcon("/icons/jira-icon.svg", JiraIssueLineMarkerProvider::class.java)
     }
     
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
-        // Look for the TAG leaf element (not the GherkinTag parent)
-        if (element.elementType?.toString() != "Gherkin:TAG") {
-            return null
-        }
-        
-        // Make sure it contains an MBA tag
-        if (!element.text.contains("MBA-")) {
+        // Simple check: only process GherkinTag instances
+        if (element !is GherkinTag) {
             return null
         }
         
