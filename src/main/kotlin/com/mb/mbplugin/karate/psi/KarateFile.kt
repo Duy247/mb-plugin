@@ -1,12 +1,12 @@
 package com.mb.mbplugin.karate.psi
 
-import com.intellij.extapi.psi.PsiFileBase
-import com.intellij.openapi.fileTypes.FileType
-import com.intellij.psi.FileViewProvider
-import com.mb.mbplugin.karate.KarateLanguage
+import org.jetbrains.plugins.cucumber.psi.GherkinFile
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
+import org.jetbrains.plugins.cucumber.psi.impl.GherkinFileImpl
+import com.intellij.psi.PsiFile
 
-class KarateFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, KarateLanguage.INSTANCE) {
-    override fun getFileType(): FileType = GherkinFileType.INSTANCE
-
-    override fun toString(): String = "KarateFile:${name}"
-}
+/**
+ * This class provides aliases for the Gherkin plugin's classes for backward compatibility
+ * with our existing code that previously used our own KarateLanguage.
+ */
+typealias KarateFile = GherkinFile

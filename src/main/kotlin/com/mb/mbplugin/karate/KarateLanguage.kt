@@ -1,12 +1,13 @@
 package com.mb.mbplugin.karate
 
 import com.intellij.lang.Language
+import org.jetbrains.plugins.cucumber.psi.GherkinLanguage
 
-class KarateLanguage : Language("Karate") {
-    companion object {
-        @JvmStatic
-        val INSTANCE = KarateLanguage()
-    }
-
-    override fun getDisplayName(): String = "Karate"
+/**
+ * This class provides backward compatibility with existing code
+ * that relied on KarateLanguage.INSTANCE
+ */
+object KarateLanguage {
+    @JvmStatic
+    val INSTANCE = GherkinLanguage.INSTANCE
 }

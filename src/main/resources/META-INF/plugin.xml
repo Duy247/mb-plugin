@@ -36,6 +36,10 @@
     <depends>org.intellij.intelliLang</depends>
     <depends optional="true" config-file="gherkin-integration.xml">gherkin</depends>
     <depends optional="true">org.jetbrains.plugins.cucumber.steps</depends>
+    
+    <!-- File type handling -->
+    <xi:include href="/META-INF/fileType.xml" xpointer="xpointer(/idea-plugin/*)"
+        xmlns:xi="http://www.w3.org/2001/XInclude"/>
 
     <!-- Project Services -->
     <projectListeners>

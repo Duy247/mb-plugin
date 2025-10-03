@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <!-- No custom file type registrations needed - we're using Gherkin plugin's file type -->
+</idea-plugin>

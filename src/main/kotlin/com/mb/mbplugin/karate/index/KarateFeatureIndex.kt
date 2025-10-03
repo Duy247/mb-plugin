@@ -12,7 +12,7 @@ import com.intellij.util.indexing.*
 import com.intellij.util.io.DataExternalizer
 import com.intellij.util.io.EnumeratorStringDescriptor
 import com.intellij.util.io.KeyDescriptor
-import com.mb.mbplugin.karate.psi.GherkinFileType
+import org.jetbrains.plugins.cucumber.psi.GherkinFileType
 import java.io.DataInput
 import java.io.DataOutput
 import java.nio.charset.StandardCharsets

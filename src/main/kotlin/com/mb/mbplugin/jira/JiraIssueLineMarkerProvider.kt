@@ -6,8 +6,11 @@ import com.intellij.openapi.editor.markup.GutterIconRenderer
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.psi.PsiElement
-import com.mb.mbplugin.karate.psi.KaratePsiElement
-import com.mb.mbplugin.karate.psi.KarateTokenTypes
+import com.intellij.psi.PsiComment
+import com.intellij.psi.util.elementType
+import org.jetbrains.plugins.cucumber.psi.GherkinElementTypes
+import org.jetbrains.plugins.cucumber.psi.GherkinTag
+import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
 import com.mb.mbplugin.settings.JiraSettings
 import javax.swing.Icon
 
@@ -90,33 +93,30 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
     }
     
     private fun isTagElement(element: PsiElement): Boolean {
-        // Check if this element is a tag element
-        if (element is KaratePsiElement && element.node.elementType == KarateTokenTypes.TAG) {
+        // Check if this is the TAG token in Gherkin PSI
+        val elementType = element.elementType
+        if (elementType != null && elementType.toString() == "Gherkin:TAG_NAME") {
             return true
         }
         
         // Check if this element is part of a tag (child of tag element)
         var parent = element.parent
         while (parent != null) {
-            if (parent is KaratePsiElement && parent.node.elementType == KarateTokenTypes.TAG) {
+            if (parent is GherkinTag) {
                 return true
             }
             parent = parent.parent
         }
         
         // Explicitly exclude Feature and Background keywords even if they contain MBA tags
-        if (element is KaratePsiElement) {
-            when (element.node.elementType) {
-                KarateTokenTypes.FEATURE_KEYWORD,
-                KarateTokenTypes.BACKGROUND_KEYWORD -> return false
-            }
+        val text = element.text.trim()
+        if (text.lowercase().startsWith("feature") || text.lowercase().startsWith("background")) {
+            return false
         }
         
         // For other elements, check if it's a tag by looking at the text pattern and context
         // Allow if element text starts with @ or contains tag-like patterns
-        val text = element.text.trim()
-        return text.startsWith("@") || 
-               (text.contains("@MBA-") && !text.lowercase().startsWith("feature") && !text.lowercase().startsWith("background"))
+        return text.startsWith("@") || text.contains("@MBA-")
     }
     
     private fun showIssueSelectionMenu(
