@@ -220,18 +220,34 @@ class KarateFeatureDocumentationProvider : AbstractDocumentationProvider() {
         val safeDocumentation = documentation.takeIf { it.isNotBlank() } ?: "No documentation content available"
         val safeFileName = fileName.takeIf { it.isNotBlank() } ?: "Unknown file"
         
+        // Process documentation to remove leading indentation
+        val processedDocumentation = removeLeadingIndentation(safeDocumentation)
+        
         // Use HTML with proper line breaks
         return buildString {
-            append("<html><body style=\"font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; white-space: pre-wrap;\">")
+            append("<html><body style=\"font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;\">")
             append("<b>Feature Documentation</b><br><br>")
             append("<b>File:</b> ${escapeHtml(safeFileName)}<br>")
             if (scenarioTag != null && scenarioTag.isNotBlank()) {
                 append("<b>Scenario:</b> ${escapeHtml(scenarioTag)}<br>")
             }
-            append("<pre style=\"font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; white-space: pre-wrap;\">")
-            append(escapeHtml(safeDocumentation))
+            append("<pre style=\"font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace; margin: 0; padding: 0;\">")
+            append(escapeHtml(processedDocumentation))
             append("</pre>")
             append("</body></html>")
+        }
+    }
+    
+    /**
+     * Removes leading indentation from documentation text.
+     * This ensures all lines are aligned to the left regardless of original indentation.
+     */
+    private fun removeLeadingIndentation(text: String): String {
+        val lines = text.lines()
+        if (lines.isEmpty()) return text
+        
+        return lines.joinToString("\n") { line ->
+            line.trimStart()
         }
     }
 
