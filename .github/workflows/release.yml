@@ -4,11 +4,9 @@ on:
   push:
     branches:
       - main
-    tags:
-      - '*' # Trigger on any tag (not just those starting with v)
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed for creating releases
@@ -29,32 +27,20 @@ jobs:
       
       - name: Build plugin
         run: ./gradlew buildPlugin
-        
-      # Check if this is a tag push
-      - name: Check if tag push
-        id: check_tag
-        run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            echo "IS_TAG=true" >> $GITHUB_OUTPUT
-          else
-            echo "IS_TAG=false" >> $GITHUB_OUTPUT
-          fi
       
-      # Only for tags: Get version from tag
-      - name: Get version from tag
-        id: get_version
-        if: steps.check_tag.outputs.IS_TAG == 'true'
+      # Extract the current version from the build
+      - name: Extract current version
+        id: extract_version
         run: |
-          # Strip 'v' prefix if present, otherwise use the tag as is
-          if [[ ${GITHUB_REF#refs/tags/} == v* ]]; then
-            echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
-            echo "RAW_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          else
-            echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-            echo "RAW_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          fi
+          # Extract version from build.gradle.kts or another reliable source
+          VERSION=$(grep -o 'version = "[^"]*"' build.gradle.kts | cut -d'"' -f2)
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Get short commit hash for reference
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_OUTPUT
       
-      # Find the distribution ZIP file (for both regular push and tag push)
+      # Find the distribution ZIP file
       - name: Find distribution ZIP
         id: find_zip
         run: |
@@ -62,7 +48,7 @@ jobs:
           echo "ZIP_FILE=$ZIP_FILE" >> $GITHUB_OUTPUT
           echo "ZIP_NAME=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
       
-      # Always upload the build artifact (regardless of tag or regular push)
+      # Upload as GitHub Actions artifact (faster access during development)
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -70,25 +56,14 @@ jobs:
           path: ${{ steps.find_zip.outputs.ZIP_FILE }}
           retention-days: 7
       
-      # Only for tags: Create release with original tag
-      - name: Create Release with original tag
-        if: steps.check_tag.outputs.IS_TAG == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          name: Release ${{ steps.get_version.outputs.VERSION }}
-          files: ${{ steps.find_zip.outputs.ZIP_FILE }}
-          draft: false
-          prerelease: false
-          tag_name: ${{ github.ref_name }}
-      
-      # Only for tags: Update latest tag and create release for "latest"
-      - name: Update latest tag and create release for "latest"
-        if: steps.check_tag.outputs.IS_TAG == 'true'
+      # Handle the "latest" tag and release
+      - name: Create/Update latest release
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
+            const fs = require('fs');
             
             // Delete 'latest' tag if it exists
             try {
@@ -102,68 +77,57 @@ jobs:
               console.log("No existing 'latest' tag found or could not delete it");
             }
             
-            // Get SHA of current tag
-            const tagRef = await github.rest.git.getRef({
-              owner,
-              repo,
-              ref: `tags/${context.ref.replace('refs/tags/', '')}`
-            });
-            
-            // Create new 'latest' tag pointing to same commit
+            // Create new 'latest' tag pointing to current commit
+            const currentCommitSha = process.env.GITHUB_SHA;
             await github.rest.git.createRef({
               owner,
               repo,
               ref: 'refs/tags/latest',
-              sha: tagRef.data.object.sha
+              sha: currentCommitSha
             });
-            console.log("Created new 'latest' tag");
+            console.log("Created new 'latest' tag pointing to", currentCommitSha);
             
-            // Also create a release for the 'latest' tag
-            // Get the release assets
-            const zipFile = process.env.ZIP_FILE;
+            // Delete existing 'latest' release if it exists
+            try {
+              const latestRelease = await github.rest.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag: 'latest'
+              });
+              
+              await github.rest.repos.deleteRelease({
+                owner,
+                repo,
+                release_id: latestRelease.data.id
+              });
+              console.log("Deleted existing 'latest' release");
+            } catch (error) {
+              console.log("No existing 'latest' release found or could not delete it");
+            }
+            
+            // Create a new release for the 'latest' tag
             const version = process.env.VERSION;
-            
-            // Create a release for the 'latest' tag
-            await github.rest.repos.createRelease({
+            const commitHash = process.env.COMMIT_HASH;
+            const release = await github.rest.repos.createRelease({
               owner,
               repo,
               tag_name: 'latest',
-              name: `Latest Release (${version})`,
-              body: `This is always the latest release (originally tagged as ${process.env.RAW_TAG})`,
+              name: `Latest Build (${version})`,
+              body: `This is the latest build from commit ${commitHash}.\nBuilt on ${new Date().toISOString().split('T')[0]}`,
               draft: false,
               prerelease: false,
               make_latest: 'true'
             });
-            console.log("Created release for 'latest' tag");
-        env:
-          ZIP_FILE: ${{ steps.find_zip.outputs.ZIP_FILE }}
-          VERSION: ${{ steps.get_version.outputs.VERSION }}
-          RAW_TAG: ${{ steps.get_version.outputs.RAW_TAG }}
-      
-      # Only for tags: Upload asset to latest release
-      - name: Upload asset to latest release
-        if: steps.check_tag.outputs.IS_TAG == 'true'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const { owner, repo } = context.repo;
+            console.log("Created new 'latest' release");
+            
+            // Upload the ZIP file to the release
             const zipPath = process.env.ZIP_FILE;
             const zipName = process.env.ZIP_NAME;
             
-            // Get the 'latest' release
-            const latestRelease = await github.rest.repos.getReleaseByTag({
-              owner,
-              repo,
-              tag: 'latest'
-            });
-            
-            // Upload the ZIP file to the 'latest' release
             await github.rest.repos.uploadReleaseAsset({
               owner,
               repo,
-              release_id: latestRelease.data.id,
+              release_id: release.data.id,
               name: zipName,
               data: fs.readFileSync(zipPath)
             });
@@ -171,3 +135,5 @@ jobs:
         env:
           ZIP_FILE: ${{ steps.find_zip.outputs.ZIP_FILE }}
           ZIP_NAME: ${{ steps.find_zip.outputs.ZIP_NAME }}
+          VERSION: ${{ steps.extract_version.outputs.VERSION }}
+          COMMIT_HASH: ${{ steps.extract_version.outputs.COMMIT_HASH }}
