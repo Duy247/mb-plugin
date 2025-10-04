@@ -1,5 +1,7 @@
 # README
 
+Đây là một chia sẻ nhỏ, không phải là hướng dẫn làm thế nào để compile ra plugin, làm thế nào để xử lý dependency của plugin, làm thế nào để maintain, upgrade,... mà là một chia sẻ về lý do plugin này được tạo ra.
+
 ## Về Karate Framework
 Karate Framework là một công cụ mạnh để viết test tự động cho API và UI. Tuy nhiên, khi đi sâu sử dụng trong dự án thực tế, chúng ta đều thấy rằng nó cũng không hề dễ dàng:
 - Cấu trúc feature file nhiều khi phức tạp, dễ gây nhầm lẫn do dựa vào nhiều `* call read` để tái sử dụng Scenario
