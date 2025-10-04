@@ -2,11 +2,13 @@ name: Build and Release Plugin
 
 on:
   push:
+    branches:
+      - main
     tags:
       - '*' # Trigger on any tag (not just those starting with v)
 
 jobs:
-  build-and-release:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: write # Needed for creating releases
@@ -27,9 +29,21 @@ jobs:
       
       - name: Build plugin
         run: ./gradlew buildPlugin
+        
+      # Check if this is a tag push
+      - name: Check if tag push
+        id: check_tag
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            echo "IS_TAG=true" >> $GITHUB_OUTPUT
+          else
+            echo "IS_TAG=false" >> $GITHUB_OUTPUT
+          fi
       
+      # Only for tags: Get version from tag
       - name: Get version from tag
         id: get_version
+        if: steps.check_tag.outputs.IS_TAG == 'true'
         run: |
           # Strip 'v' prefix if present, otherwise use the tag as is
           if [[ ${GITHUB_REF#refs/tags/} == v* ]]; then
@@ -40,6 +54,7 @@ jobs:
             echo "RAW_TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
       
+      # Find the distribution ZIP file (for both regular push and tag push)
       - name: Find distribution ZIP
         id: find_zip
         run: |
@@ -47,7 +62,17 @@ jobs:
           echo "ZIP_FILE=$ZIP_FILE" >> $GITHUB_OUTPUT
           echo "ZIP_NAME=$(basename $ZIP_FILE)" >> $GITHUB_OUTPUT
       
+      # Always upload the build artifact (regardless of tag or regular push)
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-zip
+          path: ${{ steps.find_zip.outputs.ZIP_FILE }}
+          retention-days: 7
+      
+      # Only for tags: Create release with original tag
       - name: Create Release with original tag
+        if: steps.check_tag.outputs.IS_TAG == 'true'
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ steps.get_version.outputs.VERSION }}
@@ -56,7 +81,9 @@ jobs:
           prerelease: false
           tag_name: ${{ github.ref_name }}
       
+      # Only for tags: Update latest tag and create release for "latest"
       - name: Update latest tag and create release for "latest"
+        if: steps.check_tag.outputs.IS_TAG == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -113,7 +140,9 @@ jobs:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
           RAW_TAG: ${{ steps.get_version.outputs.RAW_TAG }}
       
+      # Only for tags: Upload asset to latest release
       - name: Upload asset to latest release
+        if: steps.check_tag.outputs.IS_TAG == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
