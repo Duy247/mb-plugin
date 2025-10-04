@@ -40,7 +40,7 @@ intellijPlatform {
         }
 
         changeNotes = """
-            <h3>Version 1.1.0</h3>
+            <h3>Version 1.1.1</h3>
             <ul>
               <li>Minor change: Left alignment on docview</li>
             </ul>
