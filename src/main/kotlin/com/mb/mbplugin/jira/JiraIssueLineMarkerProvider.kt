@@ -2,7 +2,9 @@ package com.mb.mbplugin.jira
 
 import com.intellij.codeInsight.daemon.LineMarkerInfo
 import com.intellij.codeInsight.daemon.LineMarkerProvider
+import com.intellij.codeInsight.daemon.RelatedItemLineMarkerInfo
 import com.intellij.openapi.editor.markup.GutterIconRenderer
+import com.intellij.openapi.keymap.KeymapUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.psi.PsiElement
@@ -11,6 +13,8 @@ import com.intellij.psi.util.elementType
 import org.jetbrains.plugins.cucumber.psi.GherkinElementTypes
 import org.jetbrains.plugins.cucumber.psi.GherkinTag
 import org.jetbrains.plugins.cucumber.psi.GherkinTokenTypes
+import java.awt.event.InputEvent
+import java.awt.event.KeyEvent
 import com.mb.mbplugin.settings.JiraSettings
 import javax.swing.Icon
 
@@ -21,6 +25,9 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         private val JIRA_ICON: Icon = IconLoader.getIcon("/icons/jira-icon.svg", JiraIssueLineMarkerProvider::class.java)
     }
     
+    // Track which lines already have markers to avoid duplicates
+    private val processedLines = mutableSetOf<Int>()
+    
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
         // Process only leaf elements (TAG token) that are children of GherkinTag
         if (element.elementType != GherkinTokenTypes.TAG || element.parent !is GherkinTag) {
@@ -29,6 +36,15 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         
         // Get the parent GherkinTag element for easier access
         val tagElement = element.parent as GherkinTag
+        
+        // Get line number from element to track processed lines
+        val document = element.containingFile?.viewProvider?.document ?: return null
+        val lineNumber = document.getLineNumber(element.textOffset)
+        
+        // Skip if we already processed this line
+        if (lineNumber in processedLines) {
+            return null
+        }
         
         val project = tagElement.project
         val settings = JiraSettings.getInstance(project)
@@ -51,10 +67,17 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             Regex("@([A-Z]+-\\d+)")
         }
         
-        val text = tagElement.text
-        val matches = pattern.findAll(text).toList()
+        // Find all Jira issues in the line
+        val lineText = document.getText(com.intellij.openapi.util.TextRange(
+            document.getLineStartOffset(lineNumber),
+            document.getLineEndOffset(lineNumber)
+        ))
         
+        val matches = pattern.findAll(lineText).toList()
         if (matches.isEmpty()) return null
+        
+        // Add this line to processed lines set
+        processedLines.add(lineNumber)
         
         // For multiple matches, create marker for the first one but show all in tooltip
         val firstMatch = matches.first()
@@ -62,6 +85,9 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         
         // We already have project and settings variables above, so use them
         val baseUrl = settings.jiraBaseUrl.trimEnd('/')
+        
+        // Create Alt+Click text
+        val altClickText = KeymapUtil.getModifiersText(InputEvent.ALT_DOWN_MASK) + "+Click"
         
         val tooltipText = if (baseUrl.isEmpty()) {
             if (matches.size == 1) {
@@ -72,10 +98,10 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             }
         } else {
             if (matches.size == 1) {
-                "Jira Issue $issueKey - Click to open in browser"
+                "Jira Issue $issueKey - $altClickText to open in browser"
             } else {
                 val allIssues = matches.map { it.groupValues[1] }.joinToString(", ")
-                "Jira Issues: $allIssues - Click to open menu"
+                "Jira Issues: $allIssues - $altClickText to open menu"
             }
         }
         
@@ -85,38 +111,51 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             element.textRange,
             JIRA_ICON,
             { tooltipText },
-            { _, _ ->
-                if (baseUrl.isNotEmpty()) {
-                    if (matches.size == 1) {
-                        // Single issue - open directly
-                        val jiraUrl = "$baseUrl/browse/$issueKey"
-                        val viewer = JiraIssueViewer.getInstance(project)
-                        viewer.showJiraIssue(issueKey, jiraUrl)
+            { mouseEvent, _ ->
+                // Only handle Alt+Click
+                if (mouseEvent != null && mouseEvent.isAltDown) {
+                    if (baseUrl.isNotEmpty()) {
+                        if (matches.size == 1) {
+                            // Single issue - open directly
+                            val jiraUrl = "$baseUrl/browse/$issueKey"
+                            val viewer = JiraIssueViewer.getInstance(project)
+                            viewer.showJiraIssue(issueKey, jiraUrl)
+                        } else {
+                            // Multiple issues - show menu
+                            showIssueSelectionMenu(project, matches, baseUrl, element)
+                        }
                     } else {
-                        // Multiple issues - show menu
-                        showIssueSelectionMenu(project, matches, baseUrl, element)
+                        com.intellij.openapi.ui.Messages.showInfoMessage(
+                            project,
+                            "Please configure your Jira base URL in Settings > Tools > Jira Integration",
+                            "Jira Base URL Not Configured"
+                        )
                     }
-                } else {
-                    com.intellij.openapi.ui.Messages.showInfoMessage(
-                        project,
-                        "Please configure your Jira base URL in Settings > Tools > Jira Integration",
-                        "Jira Base URL Not Configured"
-                    )
                 }
             },
             GutterIconRenderer.Alignment.CENTER,
             { 
                 if (matches.size == 1) {
-                    "Open Jira Issue $issueKey"
+                    "$altClickText to open Jira issue $issueKey"
                 } else {
                     val allIssues = matches.map { it.groupValues[1] }.joinToString(", ")
-                    "Open Jira Issues: $allIssues"
+                    "$altClickText to open Jira issues: $allIssues"
                 }
             }
         )
     }
     
     // We've removed the isTagElement method and moved the check directly to getLineMarkerInfo
+    
+    // Override the collectSlowLineMarkers to clear the processedLines set before each run
+    override fun collectSlowLineMarkers(
+        elements: List<PsiElement>, 
+        result: MutableCollection<in LineMarkerInfo<*>>
+    ) {
+        // Clear the processed lines set before each run
+        processedLines.clear()
+        super.collectSlowLineMarkers(elements, result)
+    }
     
     private fun showIssueSelectionMenu(
         project: Project, 
