@@ -26,7 +26,10 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
     }
     
     // Track which lines already have markers to avoid duplicates
-    private val processedLines = mutableSetOf<Int>()
+    // Make this non-static by declaring it as a local variable in methods that need it
+    
+    // Thread-local set to avoid sharing state between different refreshes
+    private val threadLocalProcessedLines = ThreadLocal.withInitial { mutableSetOf<Pair<String, Int>>() }
     
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
         // Process only leaf elements (TAG token) that are children of GherkinTag
@@ -41,8 +44,15 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         val document = element.containingFile?.viewProvider?.document ?: return null
         val lineNumber = document.getLineNumber(element.textOffset)
         
-        // Skip if we already processed this line
-        if (lineNumber in processedLines) {
+        // Get a unique file identifier to ensure we track lines per file
+        val filePath = element.containingFile?.virtualFile?.path ?: ""
+        val lineIdentifier = Pair(filePath, lineNumber)
+        
+        // Get the thread-local set
+        val processedLines = threadLocalProcessedLines.get()
+        
+        // Skip if we already processed this line in this refresh cycle
+        if (lineIdentifier in processedLines) {
             return null
         }
         
@@ -76,8 +86,8 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         val matches = pattern.findAll(lineText).toList()
         if (matches.isEmpty()) return null
         
-        // Add this line to processed lines set
-        processedLines.add(lineNumber)
+        // Add this line to processed lines set with file path to make it unique per file
+        processedLines.add(lineIdentifier)
         
         // For multiple matches, create marker for the first one but show all in tooltip
         val firstMatch = matches.first()
@@ -152,8 +162,8 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         elements: List<PsiElement>, 
         result: MutableCollection<in LineMarkerInfo<*>>
     ) {
-        // Clear the processed lines set before each run
-        processedLines.clear()
+        // Clear the thread-local processed lines set before each run
+        threadLocalProcessedLines.get().clear()
         super.collectSlowLineMarkers(elements, result)
     }
     
