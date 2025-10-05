@@ -87,7 +87,7 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         val baseUrl = settings.jiraBaseUrl.trimEnd('/')
         
         // Create Alt+Click text
-        val altClickText = KeymapUtil.getModifiersText(InputEvent.ALT_DOWN_MASK) + "+Click"
+        val altClickText = "Click"
         
         val tooltipText = if (baseUrl.isEmpty()) {
             if (matches.size == 1) {
@@ -112,8 +112,7 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             JIRA_ICON,
             { tooltipText },
             { mouseEvent, _ ->
-                // Only handle Alt+Click
-                if (mouseEvent != null && mouseEvent.isAltDown) {
+                if (mouseEvent != null) {
                     if (baseUrl.isNotEmpty()) {
                         if (matches.size == 1) {
                             // Single issue - open directly
