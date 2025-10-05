@@ -2,10 +2,10 @@ package com.mb.mbplugin.karate.psi
 
 import com.intellij.openapi.fileTypes.LanguageFileType
 import com.intellij.openapi.util.IconLoader
-import com.mb.mbplugin.karate.KarateLanguage
+import org.jetbrains.plugins.cucumber.psi.GherkinLanguage
 import javax.swing.Icon
 
-class GherkinFileType : LanguageFileType(KarateLanguage.INSTANCE) {
+class GherkinFileType : LanguageFileType(GherkinLanguage.INSTANCE) {
     companion object {
         @JvmStatic
         val INSTANCE = GherkinFileType()

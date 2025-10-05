@@ -86,8 +86,8 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         // We already have project and settings variables above, so use them
         val baseUrl = settings.jiraBaseUrl.trimEnd('/')
         
-        // Create Alt+Click text
-        val altClickText = "Click"
+        // Create Click text
+        val clickText = "Click"
         
         val tooltipText = if (baseUrl.isEmpty()) {
             if (matches.size == 1) {
@@ -98,10 +98,10 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             }
         } else {
             if (matches.size == 1) {
-                "Jira Issue $issueKey - $altClickText to open in browser"
+                "Jira Issue $issueKey - $clickText to open in browser"
             } else {
                 val allIssues = matches.map { it.groupValues[1] }.joinToString(", ")
-                "Jira Issues: $allIssues - $altClickText to open menu"
+                "Jira Issues: $allIssues - $clickText to open menu"
             }
         }
         
@@ -135,16 +135,14 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             GutterIconRenderer.Alignment.CENTER,
             { 
                 if (matches.size == 1) {
-                    "$altClickText to open Jira issue $issueKey"
+                    "$clickText to open Jira issue $issueKey"
                 } else {
                     val allIssues = matches.map { it.groupValues[1] }.joinToString(", ")
-                    "$altClickText to open Jira issues: $allIssues"
+                    "$clickText to open Jira issues: $allIssues"
                 }
             }
         )
     }
-    
-    // We've removed the isTagElement method and moved the check directly to getLineMarkerInfo
     
     // Override the collectSlowLineMarkers to clear the processedLines set before each run
     override fun collectSlowLineMarkers(
