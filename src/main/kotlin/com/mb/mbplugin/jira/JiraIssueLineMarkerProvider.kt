@@ -113,23 +113,26 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             { tooltipText },
             { mouseEvent, _ ->
                 if (mouseEvent != null) {
-                    if (baseUrl.isNotEmpty()) {
-                        if (matches.size == 1) {
-                            // Single issue - open directly
-                            val jiraUrl = "$baseUrl/browse/$issueKey"
+                    val component = mouseEvent.component
+                    val point = mouseEvent.point
+                    val popup = com.intellij.openapi.ui.popup.JBPopupFactory.getInstance()
+                        .createPopupChooserBuilder(matches.map { it.groupValues[1] })
+                        .setTitle("Select Jira Issue to Open")
+                        .setItemChosenCallback { selectedIssue ->
+                            val jiraUrl = "$baseUrl/browse/$selectedIssue"
                             val viewer = JiraIssueViewer.getInstance(project)
-                            viewer.showJiraIssue(issueKey, jiraUrl)
-                        } else {
-                            // Multiple issues - show menu
-                            showIssueSelectionMenu(project, matches, baseUrl, element)
+                            viewer.showJiraIssue(selectedIssue, jiraUrl)
                         }
-                    } else {
-                        com.intellij.openapi.ui.Messages.showInfoMessage(
-                            project,
-                            "Please configure your Jira base URL in Settings > Tools > Jira Integration",
-                            "Jira Base URL Not Configured"
-                        )
-                    }
+                        .createPopup()
+
+                    // Convert local mouse point to screen coordinates
+                    val screenPoint = java.awt.Point(point)
+                    javax.swing.SwingUtilities.convertPointToScreen(screenPoint, component)
+
+                    // Slightly adjust Y to place it just below the icon
+                    screenPoint.y += 10
+
+                    popup.showInScreenCoordinates(component, screenPoint)
                 }
             },
             GutterIconRenderer.Alignment.CENTER,
@@ -170,6 +173,5 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             }
             .createPopup()
         
-        popup.showInBestPositionFor(com.intellij.openapi.editor.EditorFactory.getInstance().allEditors.first())
     }
 }

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.1.1"
+version = "1.1.2"
 
 repositories {
     mavenCentral()
@@ -40,9 +40,9 @@ intellijPlatform {
         }
 
         changeNotes = """
-            <h3>Version 1.1.1</h3>
+            <h3>Version 1.1.2</h3>
             <ul>
-              <li>Minor change: Left alignment on docview</li>
+              <li>Minor change: Minor change regarding shorcut keys</li>
             </ul>
         """.trimIndent()
     }
