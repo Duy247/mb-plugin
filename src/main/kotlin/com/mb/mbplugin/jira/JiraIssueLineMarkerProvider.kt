@@ -17,18 +17,42 @@ import javax.swing.Icon
 class JiraIssueLineMarkerProvider : LineMarkerProvider {
     
     companion object {
-        private val JIRA_ISSUE_PATTERN = Regex("@(MBA-\\d+)")
+        // Icon will still be static
         private val JIRA_ICON: Icon = IconLoader.getIcon("/icons/jira-icon.svg", JiraIssueLineMarkerProvider::class.java)
     }
     
     override fun getLineMarkerInfo(element: PsiElement): LineMarkerInfo<*>? {
-        // Simple check: only process GherkinTag instances
-        if (element !is GherkinTag) {
+        // Process only leaf elements (TAG token) that are children of GherkinTag
+        if (element.elementType != GherkinTokenTypes.TAG || element.parent !is GherkinTag) {
             return null
         }
         
-        val text = element.text
-        val matches = JIRA_ISSUE_PATTERN.findAll(text).toList()
+        // Get the parent GherkinTag element for easier access
+        val tagElement = element.parent as GherkinTag
+        
+        val project = tagElement.project
+        val settings = JiraSettings.getInstance(project)
+        
+        // Get the project prefixes from settings
+        val prefixes = settings.getProjectPrefixes()
+        if (prefixes.isEmpty()) {
+            return null
+        }
+        
+        // Create a regex pattern that matches any of the configured project patterns
+        val patternStr = prefixes.joinToString("|", prefix = "@((", postfix = ")\\d+)") { 
+            Regex.escape(it)
+        }
+        
+        val pattern = try {
+            Regex(patternStr)
+        } catch (e: Exception) {
+            // If there's an error in the pattern, fall back to a basic pattern
+            Regex("@([A-Z]+-\\d+)")
+        }
+        
+        val text = tagElement.text
+        val matches = pattern.findAll(text).toList()
         
         if (matches.isEmpty()) return null
         
@@ -36,8 +60,7 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
         val firstMatch = matches.first()
         val issueKey = firstMatch.groupValues[1]
         
-        val project = element.project
-        val settings = JiraSettings.getInstance(project)
+        // We already have project and settings variables above, so use them
         val baseUrl = settings.jiraBaseUrl.trimEnd('/')
         
         val tooltipText = if (baseUrl.isEmpty()) {
@@ -56,8 +79,9 @@ class JiraIssueLineMarkerProvider : LineMarkerProvider {
             }
         }
         
+        // Use the leaf element (the TAG token) for the line marker, not its parent GherkinTag
         return LineMarkerInfo(
-            element,
+            element, // Use the leaf element directly
             element.textRange,
             JIRA_ICON,
             { tooltipText },

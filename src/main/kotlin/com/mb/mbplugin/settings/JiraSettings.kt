@@ -11,7 +11,8 @@ import com.intellij.openapi.project.Project
 class JiraSettings : PersistentStateComponent<JiraSettings.State> {
     
     data class State(
-        var jiraBaseUrl: String = ""
+        var jiraBaseUrl: String = "",
+        var jiraProjectPatterns: String = "MBA-*"
     )
     
     private var myState = State()
@@ -21,6 +22,30 @@ class JiraSettings : PersistentStateComponent<JiraSettings.State> {
         set(value) {
             myState.jiraBaseUrl = value
         }
+    
+    var jiraProjectPatterns: String
+        get() = myState.jiraProjectPatterns
+        set(value) {
+            myState.jiraProjectPatterns = value
+        }
+        
+    /**
+     * Parses the jiraProjectPatterns string into a list of project prefixes.
+     * Expected format: "MBA-*, MATS-*, ABC-*" (comma-separated)
+     * Returns list of project prefixes without the asterisk: ["MBA-", "MATS-", "ABC-"]
+     */
+    fun getProjectPrefixes(): List<String> {
+        // If no patterns are set, return an empty list
+        if (jiraProjectPatterns.isBlank()) {
+            return emptyList()
+        }
+        
+        return jiraProjectPatterns
+            .split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .map { if (it.endsWith("*")) it.dropLast(1) else it }
+    }
     
     override fun getState(): State = myState
     

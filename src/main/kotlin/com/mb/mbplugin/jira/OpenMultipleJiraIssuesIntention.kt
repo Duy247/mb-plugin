@@ -10,10 +10,6 @@ import com.mb.mbplugin.settings.JiraSettings
 
 class OpenMultipleJiraIssuesIntention : IntentionAction, PriorityAction {
     
-    companion object {
-        private val JIRA_ISSUE_PATTERN = Regex("@(MBA-\\d+)")
-    }
-    
     private var issueKeys: List<String> = emptyList()
     
     override fun getText(): String {
@@ -36,8 +32,27 @@ class OpenMultipleJiraIssuesIntention : IntentionAction, PriorityAction {
         val lineEndOffset = document.getLineEndOffset(lineNumber)
         val lineText = document.getText(com.intellij.openapi.util.TextRange(lineStartOffset, lineEndOffset))
         
+        // Get project prefixes from settings
+        val settings = JiraSettings.getInstance(project)
+        val prefixes = settings.getProjectPrefixes()
+        if (prefixes.isEmpty()) {
+            return false
+        }
+        
+        // Create a regex pattern that matches any of the configured project patterns
+        val patternStr = prefixes.joinToString("|", prefix = "@((", postfix = ")\\d+)") { 
+            Regex.escape(it)
+        }
+        
+        val pattern = try {
+            Regex(patternStr)
+        } catch (e: Exception) {
+            // If there's an error in the pattern, fall back to a basic pattern
+            Regex("@([A-Z]+-\\d+)")
+        }
+        
         // Find all Jira issues on the line
-        val matches = JIRA_ISSUE_PATTERN.findAll(lineText).toList()
+        val matches = pattern.findAll(lineText).toList()
         
         if (matches.size > 1) {
             issueKeys = matches.map { it.groupValues[1] }
