@@ -20,6 +20,7 @@
                     <li>Indexing and Autocomplete for call read (file and scenario tags)</li>
                     <li>Documentation View</li>
                     <li>Jira Issue Integration with gutter icons</li>
+                    <li>Custom Test Execution</li>
                </ul>
           <br><br>
           This plugin utilizes the standard Gherkin/Cucumber plugins for syntax highlighting and formatting,
@@ -34,7 +35,7 @@
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>org.intellij.intelliLang</depends>
-    <depends optional="false">JUnit</depends>
+    <depends>JUnit</depends>
     <depends optional="true" config-file="gherkin-integration.xml">gherkin</depends>
     <depends optional="true" config-file="cucumber-steps-integration.xml">org.jetbrains.plugins.cucumber.steps</depends>
     

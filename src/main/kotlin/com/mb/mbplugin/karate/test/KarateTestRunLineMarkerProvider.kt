@@ -150,23 +150,35 @@ class KarateTestRunLineMarkerProvider : LineMarkerProvider {
                     val className = testRunnerFile.nameWithoutExtension
                     
                     // TestRunner.java template content
-                    val testRunnerContent = """
-package $packageName;
+                    val template = if (settings.testRunnerTemplate.isNotEmpty()) {
+                        settings.testRunnerTemplate
+                    } else {
+                        // Default template if settings is empty
+                        """
+package {{PACKAGE_NAME}};
 
 import com.intuit.karate.junit5.Karate;
 import org.junit.jupiter.api.BeforeAll;
 import com.karate.mock.MockServerRunner;
 
-class $className {
+class {{CLASS_NAME}} {
     @Karate.Test
     Karate testMockApi() {
-        return Karate.run("classpath:$filePath")
-                .tags("$tagText")
+        return Karate.run("classpath:{{FILE_PATH}}")
+                .tags("{{TAG_TEXT}}")
                 .karateEnv("local")
                 .relativeTo(getClass());
     }
 }
 """.trimIndent()
+                    }
+                    
+                    // Replace template variables with actual values
+                    val testRunnerContent = template
+                        .replace("{{PACKAGE_NAME}}", packageName)
+                        .replace("{{CLASS_NAME}}", className)
+                        .replace("{{FILE_PATH}}", filePath)
+                        .replace("{{TAG_TEXT}}", tagText)
                     
                     // Write the content to the file
                     testRunnerFile.writeText(testRunnerContent)

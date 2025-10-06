@@ -11,7 +11,24 @@ import com.intellij.openapi.project.Project
 class KarateTestRunnerSettings : PersistentStateComponent<KarateTestRunnerSettings.State> {
     
     data class State(
-        var testRunnerFilePath: String = "src/test/java/com/karate/runner/TestRunner.java"
+        var testRunnerFilePath: String = "src/test/java/com/karate/runner/TestRunner.java",
+        var testRunnerTemplate: String = """
+package {{PACKAGE_NAME}};
+
+import com.intuit.karate.junit5.Karate;
+import org.junit.jupiter.api.BeforeAll;
+import com.karate.mock.MockServerRunner;
+
+class {{CLASS_NAME}} {
+    @Karate.Test
+    Karate testMockApi() {
+        return Karate.run("classpath:{{FILE_PATH}}")
+                .tags("{{TAG_TEXT}}")
+                .karateEnv("local")
+                .relativeTo(getClass());
+    }
+}
+""".trimIndent()
     )
     
     private var myState = State()
@@ -20,6 +37,12 @@ class KarateTestRunnerSettings : PersistentStateComponent<KarateTestRunnerSettin
         get() = myState.testRunnerFilePath
         set(value) {
             myState.testRunnerFilePath = value
+        }
+    
+    var testRunnerTemplate: String
+        get() = myState.testRunnerTemplate
+        set(value) {
+            myState.testRunnerTemplate = value
         }
     
     override fun getState(): State = myState
