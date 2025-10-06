@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.1.2"
+version = "1.2.0"
 
 repositories {
     mavenCentral()
@@ -41,9 +41,9 @@ intellijPlatform {
         }
 
         changeNotes = """
-            <h3>Version 1.1.2</h3>
+            <h3>Version 1.2.0</h3>
             <ul>
-              <li>Minor change: Minor change regarding shorcut keys</li>
+              <li>Major update: Custom Test Execution</li>
             </ul>
         """.trimIndent()
     }
