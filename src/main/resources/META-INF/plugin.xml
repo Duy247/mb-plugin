@@ -34,6 +34,7 @@
     <depends>com.intellij.modules.java</depends>
     <depends>com.intellij.modules.json</depends>
     <depends>org.intellij.intelliLang</depends>
+    <depends optional="false">JUnit</depends>
     <depends optional="true" config-file="gherkin-integration.xml">gherkin</depends>
     <depends optional="true" config-file="cucumber-steps-integration.xml">org.jetbrains.plugins.cucumber.steps</depends>
     
@@ -65,6 +66,13 @@
                 displayName="Jira Integration"
                 id="com.mb.mbplugin.settings.JiraSettingsConfigurable"
                 implementation="com.mb.mbplugin.settings.JiraSettingsConfigurable"/>
+        
+        <!-- Karate Test Runner Settings -->
+        <projectConfigurable
+                groupId="tools"
+                displayName="Karate Test Runner"
+                id="com.mb.mbplugin.settings.KarateTestRunnerSettingsConfigurable"
+                implementation="com.mb.mbplugin.settings.KarateTestRunnerSettingsConfigurable"/>
         
         <!-- Jira Issue Intention Actions -->
         <intentionAction>

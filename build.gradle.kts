@@ -25,6 +25,7 @@ dependencies {
         bundledPlugin("com.intellij.java")
         bundledPlugin("com.intellij.modules.json")
         bundledPlugin("org.intellij.intelliLang")
+        bundledPlugin("JUnit")
         
         // Add Gherkin plugin as a non-bundled plugin dependency
         plugin("gherkin:251.14649.49") // Use a version compatible with IntelliJ 2025.1.x

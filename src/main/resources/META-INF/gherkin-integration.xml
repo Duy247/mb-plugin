@@ -25,6 +25,14 @@
             </targetElementPattern>
         </codeInsight.lineMarkerProvider>
         
+        <!-- Karate Test Run Line Marker Provider - Run test gutter icons for scenario tags -->
+        <codeInsight.lineMarkerProvider language="Gherkin"
+                                        implementationClass="com.mb.mbplugin.karate.test.KarateTestRunLineMarkerProvider">
+            <targetElementPattern language="Gherkin">
+                <instanceof class="org.jetbrains.plugins.cucumber.psi.GherkinTag"/>
+            </targetElementPattern>
+        </codeInsight.lineMarkerProvider>
+        
         <!-- Karate Feature Documentation Provider -->
         <lang.documentationProvider language="Gherkin"
                                    implementationClass="com.mb.mbplugin.karate.documentation.KarateFeatureDocumentationProvider"/>
