@@ -42,6 +42,7 @@ intellijPlatform {
 
         changeNotes = """
             <h3>Version 1.2.0</h3>
+            <h3>Version 1.2.0</h3>
             <ul>
               <li>Major change: Custom test execution</li>
             </ul>
