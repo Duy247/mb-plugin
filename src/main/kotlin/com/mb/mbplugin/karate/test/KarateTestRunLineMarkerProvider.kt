@@ -301,6 +301,9 @@ class {{CLASS_NAME}} {
                     println("JVM Parameters set: ${junitData.VM_PARAMETERS}")
                     println("Note: If using JDK 17+, consider switching to JDK 11 or 16 for better Karate compatibility")
                     
+                    // Set ShortenCommandLine to avoid "Command line is too long" errors
+                    junitConfig.setShortenCommandLine(com.intellij.execution.ShortenCommandLine.ARGS_FILE)
+                    
                     // Set the module (using read action to avoid threading violations)
                     val module = ReadAction.compute<com.intellij.openapi.module.Module?, Throwable> {
                         ModuleUtil.findModuleForFile(virtualFile, project)

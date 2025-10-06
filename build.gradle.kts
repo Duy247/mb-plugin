@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.2.1"
+version = "1.2.2"
 
 repositories {
     mavenCentral()
@@ -41,9 +41,9 @@ intellijPlatform {
         }
 
         changeNotes = """
-            <h3>Version 1.2.1</h3>
+            <h3>Version 1.2.2</h3>
             <ul>
-              <li>Minor change: Customizable Test Runner Setting</li>
+              <li>Minor change: Add Auto Shorten Commandline</li>
             </ul>
         """.trimIndent()
     }
