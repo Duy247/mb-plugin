@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb"
-version = "1.2.2"
+version = "1.2.3"
 
 repositories {
     mavenCentral()
@@ -41,9 +41,10 @@ intellijPlatform {
         }
 
         changeNotes = """
-            <h3>Version 1.2.2</h3>
+            <h3>Version 1.2.3</h3>
             <ul>
-              <li>Minor change: Add Auto Shorten Commandline</li>
+              <li>Minor change: Fix tag suggestion trigger to !</li>
+              <li>Minor change: Fix permissiveness of autocomplete trigger</li>
             </ul>
         """.trimIndent()
     }

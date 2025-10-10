@@ -11,11 +11,12 @@ import com.mb.mbplugin.karate.index.KarateFeatureIndex
 
 /**
  * Provides autocomplete for Karate tags with call read('classpath:...') suggestions
+ * Uses ! symbol for tag-based completion and # symbol for file-based completion
  */
 class KarateTagCompletionContributor : CompletionContributor() {
     
     init {
-        // Trigger completion when typing @ followed by characters in Gherkin files
+        // Trigger completion more specifically - only in Gherkin files
         extend(
             CompletionType.BASIC,
             PlatformPatterns.psiElement().withLanguage(GherkinLanguage.INSTANCE),
@@ -42,32 +43,63 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
         
         // Get the text before cursor
         val textBeforeCursor = file.text.substring(0, offset)
-        val lastAtIndex = textBeforeCursor.lastIndexOf('@')
+        val lastExclamationIndex = textBeforeCursor.lastIndexOf('!')
         val lastHashIndex = textBeforeCursor.lastIndexOf('#')
         
         // Check if we're in a context where completion should be triggered
-        // 1. After @ symbol for tag-based completion
-        // 2. After # symbol for feature file name completion
+        // 1. After ! symbol for tag-based completion (only in specific contexts)
+        // 2. After # symbol for feature file name completion (only in specific contexts)
         
         var partialTag = ""
         var isTagCompletion = false
         var isFileCompletion = false
         
-        // Check which trigger is more recent and within range
-        if (lastAtIndex != -1 && offset - lastAtIndex <= 50 && 
-            (lastHashIndex == -1 || lastAtIndex > lastHashIndex)) {
-            // Tag-based completion (@ trigger)
-            partialTag = textBeforeCursor.substring(lastAtIndex + 1)
-                .takeWhile { it.isLetterOrDigit() || it == '_' || Character.isLetter(it) }
-            isTagCompletion = true
-        } else if (lastHashIndex != -1 && offset - lastHashIndex <= 50 && 
-                   (lastAtIndex == -1 || lastHashIndex > lastAtIndex)) {
-            // Feature file name completion (# trigger)
-            partialTag = textBeforeCursor.substring(lastHashIndex + 1)
-                .takeWhile { it.isLetterOrDigit() || it == '_' || Character.isLetter(it) }
-            isFileCompletion = true
-        } else {
+        // Check which trigger is more recent and within a stricter range
+        val maxTriggerDistance = 20 // Reduced from 50 to be more restrictive for tags
+        val maxFileCompletionDistance = 30 // Slightly more permissive for file names
+        
+        if (lastExclamationIndex != -1 && offset - lastExclamationIndex <= maxTriggerDistance && 
+            (lastHashIndex == -1 || lastExclamationIndex > lastHashIndex)) {
+            
+            // Only trigger ! completion in valid contexts
+            if (isValidTagCompletionContext(textBeforeCursor, lastExclamationIndex)) {
+                partialTag = textBeforeCursor.substring(lastExclamationIndex + 1)
+                    .takeWhile { it.isLetterOrDigit() || it == '_' || Character.isLetter(it) }
+                isTagCompletion = true
+            }
+        } else if (lastHashIndex != -1 && offset - lastHashIndex <= maxFileCompletionDistance && 
+                   (lastExclamationIndex == -1 || lastHashIndex > lastExclamationIndex)) {
+            
+            // Only trigger # completion in valid contexts
+            if (isValidFileCompletionContext(textBeforeCursor, lastHashIndex)) {
+                partialTag = textBeforeCursor.substring(lastHashIndex + 1)
+                    .takeWhile { it.isLetterOrDigit() || it == '_' || Character.isLetter(it) || it == '.' }
+                isFileCompletion = true
+            }
+        }
+        
+        // If neither completion type is triggered, return early
+        if (!isTagCompletion && !isFileCompletion) {
             return
+        }
+        
+        // Additional safety check: ensure we're not in the middle of a regular word
+        // by checking if there's a word character immediately before our trigger symbol
+        if (isTagCompletion && lastExclamationIndex > 0) {
+            val charBeforeExclamation = textBeforeCursor[lastExclamationIndex - 1]
+            if (charBeforeExclamation.isLetterOrDigit() || charBeforeExclamation == '_') {
+                // We're in the middle of a word, skip completion
+                return
+            }
+        }
+        
+        if (isFileCompletion && lastHashIndex > 0) {
+            val charBeforeHash = textBeforeCursor[lastHashIndex - 1]
+            // Only allow hash completion after whitespace, quotes, or path separators
+            if (charBeforeHash.isLetterOrDigit() || charBeforeHash == '_') {
+                // We're in the middle of a word or identifier, skip completion
+                return
+            }
         }
         
         // Get all matching tags and feature files
@@ -102,14 +134,14 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
                 
                 // Create a completely unique lookup string by including file path
                 val fileName = java.io.File(tagData.absolutePath).nameWithoutExtension
-                val uniqueLookupString = "@${tagData.tag}__${fileName}__${System.nanoTime()}"
+                val uniqueLookupString = "!${tagData.tag}__${fileName}__${System.nanoTime()}"
                 
                 // Make the presentable text show the actual suggestion
                 val presentableText = "* call read('classpath:${normalizedPath}@${tagData.tag}')"
                 
                 val lookupElement = LookupElementBuilder.create(uniqueLookupString)
                     .withPresentableText(presentableText)
-                    .withLookupString("@${tagData.tag}")  // This is what the user types to match
+                    .withLookupString("!${tagData.tag}")  // This is what the user types to match
                     .withTypeText("${fileName}.feature")
                     .withTailText(" (${normalizedPath})", true)
                     .withInsertHandler { insertContext, _ ->
@@ -118,7 +150,7 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
                             // If triggered by #, use feature file insertion handler
                             handleFeatureFileInsertion(insertContext, suggestion, isTagCompletion, isFileCompletion)
                         } else {
-                            // If triggered by @, use tag insertion handler
+                            // If triggered by !, use tag insertion handler
                             handleTagInsertion(insertContext, suggestion)
                         }
                     }
@@ -211,12 +243,12 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
         // Remove what was just inserted by the completion system
         document.deleteString(startOffset, tailOffset)
         
-        // Find and replace the @tag pattern
+        // Find and replace the !tag pattern
         val currentText = document.text
         var replaceStart = startOffset - 1
         
-        // Go backwards to find the @ symbol
-        while (replaceStart >= 0 && currentText[replaceStart] != '@') {
+        // Go backwards to find the ! symbol
+        while (replaceStart >= 0 && currentText[replaceStart] != '!') {
             val char = currentText[replaceStart]
             if (!char.isLetterOrDigit() && char != '_' && !Character.isLetter(char)) {
                 break
@@ -224,8 +256,8 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
             replaceStart--
         }
         
-        // If we found @, replace from there
-        if (replaceStart >= 0 && currentText[replaceStart] == '@') {
+        // If we found !, replace from there
+        if (replaceStart >= 0 && currentText[replaceStart] == '!') {
             var replaceEnd = replaceStart + 1
             // Find end of tag
             while (replaceEnd < currentText.length && 
@@ -235,7 +267,7 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
                 replaceEnd++
             }
             
-            // Replace @tag with our suggestion
+            // Replace !tag with our suggestion
             document.replaceString(replaceStart, replaceEnd, suggestion)
         } else {
             // Fallback: just insert at current position
@@ -257,7 +289,7 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
         document.deleteString(startOffset, tailOffset)
         
         if (isTagCompletion) {
-            // Handle insertion like tag completion (after @)
+            // Handle insertion like tag completion (after !)
             handleTagInsertion(insertContext, suggestion)
         } else if (isFileCompletion) {
             // Handle insertion for feature file name completion (after #) - copy @ logic
@@ -389,5 +421,152 @@ class KarateTagCompletionProvider : CompletionProvider<CompletionParameters>() {
         // Classpath in Karate supports spaces and UTF-8 characters natively
         // Just ensure forward slashes for consistency
         return path.replace("\\", "/")
+    }
+    
+    /**
+     * Check if ! completion should be triggered in the current context.
+     * Tag completion should only be triggered in specific scenarios:
+     * 1. At the beginning of a line (tag definition)
+     * 2. After 'call read(' patterns for scenario references
+     * 3. In specific test runner contexts
+     */
+    private fun isValidTagCompletionContext(textBeforeCursor: String, exclamationIndex: Int): Boolean {
+        // Get the text on the current line before the !
+        val textUpToExclamation = textBeforeCursor.substring(0, exclamationIndex)
+        val lastNewlineIndex = textUpToExclamation.lastIndexOf('\n')
+        val currentLinePrefix = if (lastNewlineIndex == -1) {
+            textUpToExclamation
+        } else {
+            textUpToExclamation.substring(lastNewlineIndex + 1)
+        }.trim()
+        
+        LOG.debug("Tag completion context check: line prefix = '$currentLinePrefix'")
+        
+        // Case 1: ! at the beginning of a line (tag definition)
+        // Only allow if it's truly at the start of a line or after whitespace
+        if (currentLinePrefix.isEmpty()) {
+            LOG.debug("Tag completion allowed: beginning of line")
+            return true
+        }
+        
+        // Case 2: After 'call read(' patterns for scenario references
+        // Look for patterns like: call read('classpath:file.feature! (but generates @tag in output)
+        val callReadWithExclamationPattern = Regex("""call\s+read\s*\(\s*['"]classpath:[^'"]*$""", RegexOption.IGNORE_CASE)
+        if (callReadWithExclamationPattern.containsMatchIn(currentLinePrefix)) {
+            LOG.debug("Tag completion allowed: call read pattern")
+            return true
+        }
+        
+        // Case 3: Within call read with file path already specified
+        // Look for: call read('classpath:some/path/file.feature! (but generates @tag in output)
+        val filePathWithExclamationPattern = Regex("""call\s+read\s*\(\s*['"]classpath:[^'"]*\.feature$""", RegexOption.IGNORE_CASE)
+        if (filePathWithExclamationPattern.containsMatchIn(currentLinePrefix)) {
+            LOG.debug("Tag completion allowed: file path with !")
+            return true
+        }
+        
+        // Case 4: In Karate tag runner contexts (like .tags("!
+        val tagsMethodPattern = Regex("""\.tags\s*\(\s*['"]$""", RegexOption.IGNORE_CASE)
+        if (tagsMethodPattern.containsMatchIn(currentLinePrefix)) {
+            LOG.debug("Tag completion allowed: tags method")
+            return true
+        }
+        
+        // Case 5: Only in specific comment contexts that make sense for tag references
+        if (currentLinePrefix.startsWith("#") && 
+            (currentLinePrefix.contains("tag", ignoreCase = true) || 
+             currentLinePrefix.contains("scenario", ignoreCase = true))) {
+            LOG.debug("Tag completion allowed: relevant comment")
+            return true
+        }
+        
+        LOG.debug("Tag completion denied: invalid context")
+        return false
+    }
+    
+    /**
+     * Check if # completion should be triggered in the current context.
+     * File completion should be more permissive than tag completion:
+     * 1. After 'call read(' patterns for file references
+     * 2. In general contexts where # might reference a file
+     * 3. NOT in the middle of existing identifiers or inappropriate contexts
+     */
+    private fun isValidFileCompletionContext(textBeforeCursor: String, hashIndex: Int): Boolean {
+        // Get the text on the current line before the #
+        val textUpToHash = textBeforeCursor.substring(0, hashIndex)
+        val lastNewlineIndex = textUpToHash.lastIndexOf('\n')
+        val currentLinePrefix = if (lastNewlineIndex == -1) {
+            textUpToHash
+        } else {
+            textUpToHash.substring(lastNewlineIndex + 1)
+        }.trim()
+        
+        LOG.debug("File completion context check: line prefix = '$currentLinePrefix'")
+        
+        // Case 1: After 'call read(' patterns for file references
+        // Look for patterns like: call read('classpath:#
+        val callReadPattern = Regex("""call\s+read\s*\(\s*['"]classpath:\s*$""", RegexOption.IGNORE_CASE)
+        if (callReadPattern.containsMatchIn(currentLinePrefix)) {
+            LOG.debug("File completion allowed: call read pattern")
+            return true
+        }
+        
+        // Case 2: In the middle of a classpath specification
+        // Look for: call read('classpath:some/path/#
+        val classpathMidPattern = Regex("""call\s+read\s*\(\s*['"]classpath:[^'"]*/$""", RegexOption.IGNORE_CASE)
+        if (classpathMidPattern.containsMatchIn(currentLinePrefix)) {
+            LOG.debug("File completion allowed: classpath path")
+            return true
+        }
+        
+        // Case 3: In comment contexts (more permissive for file references)
+        if (currentLinePrefix.startsWith("#")) {
+            LOG.debug("File completion allowed: comment context")
+            return true
+        }
+        
+        // Case 4: After whitespace or at reasonable boundaries (more permissive)
+        // Don't allow if it's clearly in the middle of code that's not file-related
+        if (hashIndex > 0) {
+            val charBeforeHash = textBeforeCursor[hashIndex - 1]
+            
+            // Deny if it's clearly in inappropriate contexts
+            if (currentLinePrefix.contains("=") && !currentLinePrefix.contains("read") && !currentLinePrefix.contains("call")) {
+                // Looks like a variable assignment, not file reference
+                LOG.debug("File completion denied: variable assignment context")
+                return false
+            }
+            
+            if (currentLinePrefix.matches(Regex(".*\\b(def|function|class|method)\\b.*", RegexOption.IGNORE_CASE))) {
+                // Inside function/class definitions
+                LOG.debug("File completion denied: function/class definition")
+                return false
+            }
+            
+            // If it's after reasonable separators, allow it
+            if (charBeforeHash.isWhitespace() || charBeforeHash == ':' || charBeforeHash == '/' || 
+                charBeforeHash == '(' || charBeforeHash == '\'' || charBeforeHash == '"') {
+                LOG.debug("File completion allowed: after reasonable separator")
+                return true
+            }
+        }
+        
+        // Case 5: Beginning of line (more permissive)
+        if (currentLinePrefix.isEmpty()) {
+            LOG.debug("File completion allowed: beginning of line")
+            return true
+        }
+        
+        // Case 6: In contexts that might reference files
+        val fileReferenceKeywords = listOf("read", "load", "include", "import", "file", "feature", "call")
+        if (fileReferenceKeywords.any { keyword -> 
+            currentLinePrefix.contains(keyword, ignoreCase = true) 
+        }) {
+            LOG.debug("File completion allowed: file reference keywords")
+            return true
+        }
+        
+        LOG.debug("File completion denied: no valid context found")
+        return false
     }
 }
